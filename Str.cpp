@@ -17,7 +17,7 @@
 #endif
 
 // Clear 
-void	Str::clear()
+void    Str::clear()
 {
     if (Owned && !is_using_local_buf())
         STR_MEMFREE(Data);
@@ -37,7 +37,7 @@ void	Str::clear()
 }
 
 // Reserve memory, preserving the current of the buffer
-void	Str::reserve(int new_capacity)
+void    Str::reserve(int new_capacity)
 {
     if (new_capacity <= Capacity)
         return;
@@ -64,7 +64,7 @@ void	Str::reserve(int new_capacity)
 }
 
 // Reserve memory, discarding the current of the buffer (if we expect to be fully rewritten)
-void	Str::reserve_discard(int new_capacity)
+void    Str::reserve_discard(int new_capacity)
 {
     if (new_capacity <= Capacity)
         return;
@@ -86,7 +86,7 @@ void	Str::reserve_discard(int new_capacity)
     }
 }
 
-void	Str::shrink_to_fit()
+void    Str::shrink_to_fit()
 {
     if (!Owned || is_using_local_buf())
         return;
@@ -101,7 +101,7 @@ void	Str::shrink_to_fit()
     Capacity = new_capacity;
 }
 
-int		Str::setfv(const char* fmt, va_list args)
+int     Str::setfv(const char* fmt, va_list args)
 {
     // Needed for portability on platforms where va_list are passed by reference and modified by functions
     va_list args2;
@@ -132,7 +132,7 @@ int		Str::setfv(const char* fmt, va_list args)
     return len;
 }
 
-int		Str::setf(const char* fmt, ...)
+int     Str::setf(const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -141,7 +141,7 @@ int		Str::setf(const char* fmt, ...)
     return len;
 }
 
-int		Str::setfv_nogrow(const char* fmt, va_list args)
+int     Str::setfv_nogrow(const char* fmt, va_list args)
 {
     int w = vsnprintf(Data, Capacity, fmt, args);
     Data[Capacity-1] = 0;
@@ -149,7 +149,7 @@ int		Str::setfv_nogrow(const char* fmt, va_list args)
     return (w == -1) ? Capacity-1 : w;
 }
 
-int		Str::setf_nogrow(const char* fmt, ...)
+int     Str::setf_nogrow(const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);

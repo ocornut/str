@@ -24,9 +24,9 @@
 
 // You can also copy references/literal pointer without allocation:
 //    Str s;
-//    s.set_ref("hey!");	// setter for literals/references
+//    s.set_ref("hey!");    // setter for literals/references
 // Or via the helper constructor
-//    StrRef("hey!");		// constructor for literals/reference
+//    StrRef("hey!");       // constructor for literals/reference
 
 // You can cast any of StrXXX as a Str and it will still be functional. 
 // Using a template e.g. Str<N> we could remove the LocalBufSize storage but it would make passing typed Str<> to functions tricky.
@@ -38,10 +38,10 @@
 #pragma once
 
 // Configuration
-#define STR_MEMALLOC			malloc
-#define STR_MEMFREE				free
-#define STR_ASSERT				assert
-#define STR_SUPPORT_STD_STRING	1
+#define STR_MEMALLOC            malloc
+#define STR_MEMFREE             free
+#define STR_ASSERT              assert
+#define STR_SUPPORT_STD_STRING  1
 
 #ifdef STR_SUPPORT_STD_STRING
 #include <string>
@@ -51,54 +51,54 @@
 // Footprint is 8-bytes (32-bits arch) or 12-bytes (64-bits arch)
 class Str
 {
-    char*               Data;					// Point to LocalBuf() or heap allocated
-    int					Capacity : 21;			// Max 2 MB
-    int					LocalBufSize : 10;		// Max 1023 bytes
-    unsigned int		Owned : 1;				// 
+    char*               Data;                   // Point to LocalBuf() or heap allocated
+    int                 Capacity : 21;          // Max 2 MB
+    int                 LocalBufSize : 10;      // Max 1023 bytes
+    unsigned int        Owned : 1;              // 
 
 public:
-    inline const char*  c_str() const							{ return Data; }
-    inline bool         empty() const							{ return Data[0] == 0; }
-    inline int          length() const							{ return strlen(Data); }    // by design, but we could maintain it?
-    inline int          capacity() const						{ return Capacity; }
+    inline const char*  c_str() const                           { return Data; }
+    inline bool         empty() const                           { return Data[0] == 0; }
+    inline int          length() const                          { return strlen(Data); }    // by design, but we could maintain it?
+    inline int          capacity() const                        { return Capacity; }
 
-    inline void			set_ref(const char* src);
-    int					setf(const char* fmt, ...);
-    int					setfv(const char* fmt, va_list args);
-    int					setf_nogrow(const char* fmt, ...);
-    int					setfv_nogrow(const char* fmt, va_list args);
+    inline void         set_ref(const char* src);
+    int                 setf(const char* fmt, ...);
+    int                 setfv(const char* fmt, va_list args);
+    int                 setf_nogrow(const char* fmt, ...);
+    int                 setfv_nogrow(const char* fmt, va_list args);
 
-    void				clear();
-    void				reserve(int cap);
-    void				reserve_discard(int cap);
-    void				shrink_to_fit();
+    void                clear();
+    void                reserve(int cap);
+    void                reserve_discard(int cap);
+    void                shrink_to_fit();
 
-    inline char&		operator[](size_t i)					{ return Data[i]; }
-    inline char			operator[](size_t i) const				{ return Data[i]; }
+    inline char&        operator[](size_t i)                    { return Data[i]; }
+    inline char         operator[](size_t i) const              { return Data[i]; }
     //explicit operator const char*() const{ return Data; }
 
     inline Str();
     inline Str(const char* rhs);
-    inline void			set(const char* src);
-    inline Str&			operator=(const char* rhs)				{ set(rhs); return *this; }
-    inline bool			operator==(const char* rhs) const		{ return strcmp(c_str(), rhs) == 0; }
+    inline void         set(const char* src);
+    inline Str&         operator=(const char* rhs)              { set(rhs); return *this; }
+    inline bool         operator==(const char* rhs) const       { return strcmp(c_str(), rhs) == 0; }
 
     inline Str(const Str& rhs);
-    inline void			set(const Str& src);
-    inline Str&			operator=(const Str& rhs)				{ set(rhs); return *this; }
-    inline bool			operator==(const Str& rhs) const		{ return strcmp(c_str(), rhs.c_str()) == 0; }
+    inline void         set(const Str& src);
+    inline Str&         operator=(const Str& rhs)               { set(rhs); return *this; }
+    inline bool         operator==(const Str& rhs) const        { return strcmp(c_str(), rhs.c_str()) == 0; }
 
 #if STR_SUPPORT_STD_STRING
     inline Str(const std::string& rhs);
-    inline void			set(const std::string& src);
-    inline Str&			operator=(const std::string& rhs)		{ set(rhs); return *this; }
-    inline bool			operator==(const std::string& rhs)const { return strcmp(c_str(), rhs.c_str()) == 0; }
+    inline void         set(const std::string& src);
+    inline Str&         operator=(const std::string& rhs)       { set(rhs); return *this; }
+    inline bool         operator==(const std::string& rhs)const { return strcmp(c_str(), rhs.c_str()) == 0; }
 #endif
 
 protected:
-    inline char*        local_buf()								{ return (char*)this + sizeof(Str); }
-    inline const char*  local_buf() const						{ return (char*)this + sizeof(Str); }
-    inline bool         is_using_local_buf() const				{ return Data == local_buf() && LocalBufSize != 0; }
+    inline char*        local_buf()                             { return (char*)this + sizeof(Str); }
+    inline const char*  local_buf() const                       { return (char*)this + sizeof(Str); }
+    inline bool         is_using_local_buf() const              { return Data == local_buf() && LocalBufSize != 0; }
 
     // Constructor for StrXXX variants with local buffer
     Str(unsigned short local_buf_size)
@@ -131,7 +131,7 @@ void    Str::set(const Str& src)
 }
 
 #if STR_SUPPORT_STD_STRING
-void	Str::set(const std::string& src)
+void    Str::set(const std::string& src)
 {
     int buf_len = (int)src.length()+1;
     if ((int)Capacity < buf_len)
@@ -141,7 +141,7 @@ void	Str::set(const std::string& src)
 }
 #endif
 
-inline void	Str::set_ref(const char* src)
+inline void Str::set_ref(const char* src)
 {
     if (Owned && !is_using_local_buf())
         STR_MEMFREE(Data);
@@ -152,7 +152,7 @@ inline void	Str::set_ref(const char* src)
 
 Str::Str()
 {
-    Data = "";		// Shared read-only initial buffer for 0 capacity
+    Data = "";      // Shared read-only initial buffer for 0 capacity
     Capacity = 0;
     LocalBufSize = 0;
     Owned = 0;
@@ -198,33 +198,33 @@ public:
 // NB: we need to override the constructor and = operator for both Str& and TYPENAME (without the later compiler will call a default copy operator)
 #if STR_SUPPORT_STD_STRING
 
-#define STR_DEFINETYPE(TYPENAME, LOCALBUFSIZE)										\
-class TYPENAME : public Str															\
-{																					\
-    char local_buf[LOCALBUFSIZE];													\
-public:																				\
-    TYPENAME() : Str(LOCALBUFSIZE) {}												\
-    TYPENAME(const Str& rhs) : Str(LOCALBUFSIZE) { set(rhs); }						\
-    TYPENAME(const TYPENAME& rhs) : Str(LOCALBUFSIZE) { set(rhs); }					\
-    TYPENAME&	operator=(const char* rhs)			{ set(rhs); return *this; }		\
-    TYPENAME&	operator=(const Str& rhs)			{ set(rhs); return *this; }		\
-    TYPENAME&	operator=(const TYPENAME& rhs)		{ set(rhs); return *this; }		\
-    TYPENAME&	operator=(const std::string& rhs)	{ set(rhs); return *this; }		\
-};																					
+#define STR_DEFINETYPE(TYPENAME, LOCALBUFSIZE)                                      \
+class TYPENAME : public Str                                                         \
+{                                                                                   \
+    char local_buf[LOCALBUFSIZE];                                                   \
+public:                                                                             \
+    TYPENAME() : Str(LOCALBUFSIZE) {}                                               \
+    TYPENAME(const Str& rhs) : Str(LOCALBUFSIZE) { set(rhs); }                      \
+    TYPENAME(const TYPENAME& rhs) : Str(LOCALBUFSIZE) { set(rhs); }                 \
+    TYPENAME&   operator=(const char* rhs)          { set(rhs); return *this; }     \
+    TYPENAME&   operator=(const Str& rhs)           { set(rhs); return *this; }     \
+    TYPENAME&   operator=(const TYPENAME& rhs)      { set(rhs); return *this; }     \
+    TYPENAME&   operator=(const std::string& rhs)   { set(rhs); return *this; }     \
+};                                                                                  
 
 #else
 
-#define STR_DEFINETYPE(TYPENAME, LOCALBUFSIZE)										\
-class TYPENAME : public Str															\
-{																					\
-    char local_buf[LOCALBUFSIZE];													\
-public:																				\
-    TYPENAME() : Str(LOCALBUFSIZE) {}												\
-    TYPENAME(const Str& rhs) : Str(LOCALBUFSIZE) { set(rhs); }						\
-    TYPENAME(const TYPENAME& rhs) : Str(LOCALBUFSIZE) { set(rhs); }					\
-    TYPENAME&	operator=(const char* rhs)			{ set(rhs); return *this; }		\
-    TYPENAME&	operator=(const Str& rhs)			{ set(rhs); return *this; }		\
-    TYPENAME&	operator=(const TYPENAME& rhs)		{ set(rhs); return *this; }		\
+#define STR_DEFINETYPE(TYPENAME, LOCALBUFSIZE)                                      \
+class TYPENAME : public Str                                                         \
+{                                                                                   \
+    char local_buf[LOCALBUFSIZE];                                                   \
+public:                                                                             \
+    TYPENAME() : Str(LOCALBUFSIZE) {}                                               \
+    TYPENAME(const Str& rhs) : Str(LOCALBUFSIZE) { set(rhs); }                      \
+    TYPENAME(const TYPENAME& rhs) : Str(LOCALBUFSIZE) { set(rhs); }                 \
+    TYPENAME&   operator=(const char* rhs)          { set(rhs); return *this; }     \
+    TYPENAME&   operator=(const Str& rhs)           { set(rhs); return *this; }     \
+    TYPENAME&   operator=(const TYPENAME& rhs)      { set(rhs); return *this; }     \
 };
 
 #endif
