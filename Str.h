@@ -38,7 +38,7 @@
 #pragma once
 
 // Configuration
-#ifndef STR_MALLOC
+#ifndef STR_MEMALLOC
 #define STR_MEMALLOC            malloc
 #endif
 #ifndef STR_MEMFREE
