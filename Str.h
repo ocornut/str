@@ -46,6 +46,7 @@
 #endif
 #ifndef STR_ASSERT
 #define STR_ASSERT              assert
+#include <assert.h>
 #endif
 #ifndef STR_SUPPORT_STD_STRING
 #define STR_SUPPORT_STD_STRING  1

@@ -8,7 +8,7 @@
 // distribute, and modify this file as you see fit.
 
 #include "Str.h"
-#include <stdio.h>
+#include <stdarg.h>         // va_list
 
 // On some platform vsnprintf() takes va_list by reference and modifies it.
 // va_copy is the 'correct' way to copy a va_list but Visual Studio prior to 2013 doesn't have it.
