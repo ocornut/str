@@ -1,5 +1,4 @@
-# str
-Simple C++ string type with an optional local buffer
+Simple c++ string type with an optional local buffer
 
 ```
 Str v0.1 
@@ -15,6 +14,7 @@ distribute, and modify this file as you see fit.
 - String are mutable. We don't maintain size so length() is not-constant time. 
 - Maximum string size currently limited to 2 MB (we allocate 21 bits to hold capacity)
 - Local buffer size is currently limited to 1023 bytes (we allocate 10 bits to hold local buffer size)
+- In "non-owned" mode for literals/reference we don't do any tracking/counting of references.
 - This code hasn't been tested very much. it is probably incomplete or broken. Made it for my own use.
 
 The idea is that you can provide an arbitrary sized local buffer if you expect string to fit 
