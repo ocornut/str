@@ -19,23 +19,36 @@ distribute, and modify this file as you see fit.
 
 The idea is that you can provide an arbitrary sized local buffer if you expect string to fit 
 most of the time, and then you avoid using costly heap.
-   Str16 s = "filename.h";
 
-But it can also use heap if necessary.
-   Str16 s = "long_filename_not_very_long_but_longer_than_expected.h";   // use heap
-   Str256 s = "long_filename_not_very_long_but_longer_than_expected.h";  // use local buffer
+No local buffer, always use heap, sizeof()==8
 
-Always use heap:
    Str s = "hey";
 
+Local buffer of 16 bytes, sizeof() == 8+16 bytes.
+
+   Str16 s = "filename.h"; // copy into local buffer
+   Str16 s = "long_filename_not_very_long_but_longer_than_expected.h";   // use heap
+
+Local buffer of 256 bytes, sizeof() == 8+256 bytes.
+
+   Str256 s = "long_filename_not_very_long_but_longer_than_expected.h";  // copy into local bufer
+
+Format string helpers:
+
+   Str256 filename;
+   filename.setf("%s/%s.tmp", folder, filename);
+
+You can pass your StrXXX* as a Str* to functions and it will still be functional. 
+
 You can also copy references/literal pointer without allocation:
+
    Str s;
    s.set_ref("hey!");	// setter for literals/references
    
 Or via the helper constructor
+
    StrRef("hey!");		// constructor for literals/reference
 
-You can cast any of StrXXX as a Str and it will still be functional. 
 (Using a template e.g. Str<N> we could remove the LocalBufSize storage but it would make passing 
 typed Str<> to functions tricky. Instead we don't use template so you can pass them around as
 the base type Str*. Also, templates are ugly.)
