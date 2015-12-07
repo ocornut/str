@@ -38,10 +38,18 @@
 #pragma once
 
 // Configuration
+#ifndef STR_MALLOC
 #define STR_MEMALLOC            malloc
+#endif
+#ifndef STR_MEMFREE
 #define STR_MEMFREE             free
+#endif
+#ifndef STR_ASSERT
 #define STR_ASSERT              assert
+#endif
+#ifndef STR_SUPPORT_STD_STRING
 #define STR_SUPPORT_STD_STRING  1
+#endif
 
 #ifdef STR_SUPPORT_STD_STRING
 #include <string>
