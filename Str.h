@@ -63,36 +63,36 @@ public:
     inline int          capacity() const						{ return Capacity; }
 
     inline void			set_ref(const char* src);
-	int					setf(const char* fmt, ...);
-	int					setfv(const char* fmt, va_list args);
-	int					setf_nogrow(const char* fmt, ...);
-	int					setfv_nogrow(const char* fmt, va_list args);
+    int					setf(const char* fmt, ...);
+    int					setfv(const char* fmt, va_list args);
+    int					setf_nogrow(const char* fmt, ...);
+    int					setfv_nogrow(const char* fmt, va_list args);
 
-	void				clear();
-	void				reserve(int cap);
-	void				reserve_discard(int cap);
-	void				shrink_to_fit();
+    void				clear();
+    void				reserve(int cap);
+    void				reserve_discard(int cap);
+    void				shrink_to_fit();
 
     inline char&		operator[](size_t i)					{ return Data[i]; }
     inline char			operator[](size_t i) const				{ return Data[i]; }
-	//explicit operator const char*() const{ return Data; }
+    //explicit operator const char*() const{ return Data; }
 
     inline Str();
-	inline Str(const char* rhs);
-	inline void			set(const char* src);
-	inline Str&			operator=(const char* rhs)				{ set(rhs); return *this; }
-	inline bool			operator==(const char* rhs) const		{ return strcmp(c_str(), rhs) == 0; }
+    inline Str(const char* rhs);
+    inline void			set(const char* src);
+    inline Str&			operator=(const char* rhs)				{ set(rhs); return *this; }
+    inline bool			operator==(const char* rhs) const		{ return strcmp(c_str(), rhs) == 0; }
 
-	inline Str(const Str& rhs);
+    inline Str(const Str& rhs);
     inline void			set(const Str& src);
-	inline Str&			operator=(const Str& rhs)				{ set(rhs); return *this; }
-	inline bool			operator==(const Str& rhs) const		{ return strcmp(c_str(), rhs.c_str()) == 0; }
+    inline Str&			operator=(const Str& rhs)				{ set(rhs); return *this; }
+    inline bool			operator==(const Str& rhs) const		{ return strcmp(c_str(), rhs.c_str()) == 0; }
 
 #if STR_SUPPORT_STD_STRING
-	inline Str(const std::string& rhs);
-	inline void			set(const std::string& src);
-	inline Str&			operator=(const std::string& rhs)		{ set(rhs); return *this; }
-	inline bool			operator==(const std::string& rhs)const { return strcmp(c_str(), rhs.c_str()) == 0; }
+    inline Str(const std::string& rhs);
+    inline void			set(const std::string& src);
+    inline Str&			operator=(const std::string& rhs)		{ set(rhs); return *this; }
+    inline bool			operator==(const std::string& rhs)const { return strcmp(c_str(), rhs.c_str()) == 0; }
 #endif
 
 protected:
@@ -100,12 +100,12 @@ protected:
     inline const char*  local_buf() const						{ return (char*)this + sizeof(Str); }
     inline bool         is_using_local_buf() const				{ return Data == local_buf() && LocalBufSize != 0; }
 
-	// Constructor for StrXXX variants with local buffer
+    // Constructor for StrXXX variants with local buffer
     Str(unsigned short local_buf_size)
     {
-		STR_ASSERT(local_buf_size < 1024);
-	    Data = local_buf();
-		Data[0] = '\0';
+        STR_ASSERT(local_buf_size < 1024);
+        Data = local_buf();
+        Data[0] = '\0';
         Capacity = local_buf_size;
         LocalBufSize = local_buf_size;
         Owned = 1;
@@ -114,45 +114,45 @@ protected:
 
 void    Str::set(const char* src)
 {
-	int buf_len = strlen(src)+1;
-	if ((int)Capacity < buf_len)
-		reserve_discard(buf_len);
-	memcpy(Data, src, buf_len);
-	Owned = 1;
+    int buf_len = strlen(src)+1;
+    if ((int)Capacity < buf_len)
+        reserve_discard(buf_len);
+    memcpy(Data, src, buf_len);
+    Owned = 1;
 }
 
 void    Str::set(const Str& src)
 {
-	int buf_len = strlen(src.c_str())+1;
-	if ((int)Capacity < buf_len)
-		reserve_discard(buf_len);
-	memcpy(Data, src.c_str(), buf_len);
-	Owned = 1;
+    int buf_len = strlen(src.c_str())+1;
+    if ((int)Capacity < buf_len)
+        reserve_discard(buf_len);
+    memcpy(Data, src.c_str(), buf_len);
+    Owned = 1;
 }
 
 #if STR_SUPPORT_STD_STRING
 void	Str::set(const std::string& src)
 {
-	int buf_len = (int)src.length()+1;
-	if ((int)Capacity < buf_len)
-		reserve_discard(buf_len);
-	memcpy(Data, src.c_str(), buf_len);
-	Owned = 1;
+    int buf_len = (int)src.length()+1;
+    if ((int)Capacity < buf_len)
+        reserve_discard(buf_len);
+    memcpy(Data, src.c_str(), buf_len);
+    Owned = 1;
 }
 #endif
 
 inline void	Str::set_ref(const char* src)
 {
-	if (Owned && !is_using_local_buf())
-		STR_MEMFREE(Data);
-	Data = (char*)src;
-	Capacity = 0;
-	Owned = 0;
+    if (Owned && !is_using_local_buf())
+        STR_MEMFREE(Data);
+    Data = (char*)src;
+    Capacity = 0;
+    Owned = 0;
 }
 
 Str::Str()
 {
-	Data = "";		// Shared read-only initial buffer for 0 capacity
+    Data = "";		// Shared read-only initial buffer for 0 capacity
     Capacity = 0;
     LocalBufSize = 0;
     Owned = 0;
@@ -160,30 +160,30 @@ Str::Str()
 
 Str::Str(const Str& rhs)
 {
-	Data = "";
-	Capacity = 0;
-	LocalBufSize = 0;
-	Owned = 0;
-	set(rhs);
+    Data = "";
+    Capacity = 0;
+    LocalBufSize = 0;
+    Owned = 0;
+    set(rhs);
 }
 
 Str::Str(const char* rhs)
 {
-	Data = "";
+    Data = "";
     Capacity = 0;
     LocalBufSize = 0;
     Owned = 0;
-	set(rhs);
+    set(rhs);
 }
 
 #if STR_SUPPORT_STD_STRING
 Str::Str(const std::string& rhs)
 {
-	Data = "";
+    Data = "";
     Capacity = 0;
     LocalBufSize = 0;
     Owned = 0;
-	set(rhs);
+    set(rhs);
 }
 #endif
 
@@ -191,7 +191,7 @@ Str::Str(const std::string& rhs)
 class StrRef : public Str
 {
 public:
-	StrRef(const char* s) : Str() { set_ref(s); }
+    StrRef(const char* s) : Str() { set_ref(s); }
 };
 
 // Types embedding a local buffer
@@ -206,10 +206,10 @@ public:																				\
     TYPENAME() : Str(LOCALBUFSIZE) {}												\
     TYPENAME(const Str& rhs) : Str(LOCALBUFSIZE) { set(rhs); }						\
     TYPENAME(const TYPENAME& rhs) : Str(LOCALBUFSIZE) { set(rhs); }					\
-	TYPENAME&	operator=(const char* rhs)			{ set(rhs); return *this; }		\
-	TYPENAME&	operator=(const Str& rhs)			{ set(rhs); return *this; }		\
-	TYPENAME&	operator=(const TYPENAME& rhs)		{ set(rhs); return *this; }		\
-	TYPENAME&	operator=(const std::string& rhs)	{ set(rhs); return *this; }		\
+    TYPENAME&	operator=(const char* rhs)			{ set(rhs); return *this; }		\
+    TYPENAME&	operator=(const Str& rhs)			{ set(rhs); return *this; }		\
+    TYPENAME&	operator=(const TYPENAME& rhs)		{ set(rhs); return *this; }		\
+    TYPENAME&	operator=(const std::string& rhs)	{ set(rhs); return *this; }		\
 };																					
 
 #else
@@ -222,9 +222,9 @@ public:																				\
     TYPENAME() : Str(LOCALBUFSIZE) {}												\
     TYPENAME(const Str& rhs) : Str(LOCALBUFSIZE) { set(rhs); }						\
     TYPENAME(const TYPENAME& rhs) : Str(LOCALBUFSIZE) { set(rhs); }					\
-	TYPENAME&	operator=(const char* rhs)			{ set(rhs); return *this; }		\
-	TYPENAME&	operator=(const Str& rhs)			{ set(rhs); return *this; }		\
-	TYPENAME&	operator=(const TYPENAME& rhs)		{ set(rhs); return *this; }		\
+    TYPENAME&	operator=(const char* rhs)			{ set(rhs); return *this; }		\
+    TYPENAME&	operator=(const Str& rhs)			{ set(rhs); return *this; }		\
+    TYPENAME&	operator=(const TYPENAME& rhs)		{ set(rhs); return *this; }		\
 };
 
 #endif
