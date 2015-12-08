@@ -104,6 +104,13 @@ public:
     inline bool         operator==(const std::string& rhs)const { return strcmp(c_str(), rhs.c_str()) == 0; }
 #endif
 
+	// Destructor for all variants
+	inline ~Str()
+	{
+		if (Owned && !is_using_local_buf())
+			STR_MEMFREE(Data);
+	}
+
 protected:
     inline char*        local_buf()                             { return (char*)this + sizeof(Str); }
     inline const char*  local_buf() const                       { return (char*)this + sizeof(Str); }
