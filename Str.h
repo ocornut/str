@@ -57,7 +57,7 @@
 #endif
 
 // This is the base class that you can pass around
-// Footprint is 8-bytes (32-bits arch) or 12-bytes (64-bits arch)
+// Footprint is 8-bytes (32-bits arch) or 16-bytes (64-bits arch)
 class Str
 {
     char*               Data;                   // Point to LocalBuf() or heap allocated
