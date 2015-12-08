@@ -1,4 +1,4 @@
-// Str v0.1 
+// Str v0.11
 // Simple c++ string type with an optional local buffer
 // https://github.com/ocornut/str
 

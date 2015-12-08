@@ -1,7 +1,7 @@
 Simple c++ string type with an optional local buffer
 
 ```
-Str v0.1 
+Str
 Simple c++ string type with an optional local buffer
 https://github.com/ocornut/str
 
@@ -15,21 +15,22 @@ distribute, and modify this file as you see fit.
 - Maximum string size currently limited to 2 MB (we allocate 21 bits to hold capacity)
 - Local buffer size is currently limited to 1023 bytes (we allocate 10 bits to hold local buffer size)
 - In "non-owned" mode for literals/reference we don't do any tracking/counting of references.
+- Overhead is 8-bytes in 32-bits, 16-bits in 64-bits (12 + alignment)
 - This code hasn't been tested very much. it is probably incomplete or broken. Made it for my own use.
 
 The idea is that you can provide an arbitrary sized local buffer if you expect string to fit 
 most of the time, and then you avoid using costly heap.
 
-No local buffer, always use heap, sizeof()==8
+No local buffer, always use heap, sizeof()==8/16
 
    Str s = "hey";
 
-Local buffer of 16 bytes, sizeof() == 8+16 bytes.
+Local buffer of 16 bytes, sizeof() == 8/16+16 bytes.
 
    Str16 s = "filename.h"; // copy into local buffer
    Str16 s = "long_filename_not_very_long_but_longer_than_expected.h";   // use heap
 
-Local buffer of 256 bytes, sizeof() == 8+256 bytes.
+Local buffer of 256 bytes, sizeof() == 8/16+256 bytes.
 
    Str256 s = "long_filename_not_very_long_but_longer_than_expected.h";  // copy into local bufer
 
