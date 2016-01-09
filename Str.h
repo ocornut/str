@@ -1,4 +1,4 @@
-// Str v0.11
+// Str v0.12
 // Simple c++ string type with an optional local buffer
 // https://github.com/ocornut/str
 
@@ -90,6 +90,7 @@ class Str
     unsigned int        Owned : 1;              // 
 
 public:
+	inline char*		c_str()									{ return Data; }
     inline const char*  c_str() const                           { return Data; }
     inline bool         empty() const                           { return Data[0] == 0; }
     inline int          length() const                          { return strlen(Data); }    // by design, but we could maintain it?
@@ -100,6 +101,8 @@ public:
     int                 setfv(const char* fmt, va_list args);
     int                 setf_nogrow(const char* fmt, ...);
     int                 setfv_nogrow(const char* fmt, va_list args);
+	int					appendf(const char* fmt, ...);
+	int					appendfv(const char* fmt, va_list args);
 
     void                clear();
     void                reserve(int cap);

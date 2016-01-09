@@ -101,6 +101,7 @@ void    Str::shrink_to_fit()
     Capacity = new_capacity;
 }
 
+// FIXME: merge setfv() and appendfv()?
 int     Str::setfv(const char* fmt, va_list args)
 {
     // Needed for portability on platforms where va_list are passed by reference and modified by functions
@@ -154,6 +155,49 @@ int     Str::setf_nogrow(const char* fmt, ...)
     va_list args;
     va_start(args, fmt);
     int len = setfv_nogrow(fmt, args);
+    va_end(args);
+    return len;
+}
+
+// FIXME: merge setfv() and appendfv()?
+int     Str::appendfv(const char* fmt, va_list args)
+{
+    // Needed for portability on platforms where va_list are passed by reference and modified by functions
+    va_list args2;
+    va_copy(args2, args);
+
+	int cur_len = length();
+
+    // MSVC returns -1 on overflow when writing, which forces us to do two passes
+    // FIXME-OPT: Find a way around that.
+#ifdef _MSC_VER
+    int app_len = vsnprintf(NULL, 0, fmt, args);
+    STR_ASSERT(app_len >= 0);
+
+    if (Capacity < cur_len+app_len+1)
+        reserve(cur_len+app_len+1);
+    app_len = vsnprintf(Data+cur_len, app_len+1, fmt, args2);
+#else
+    // First try
+    int app_len = vsnprintf(Owned ? Data+cur_len : NULL, Owned ? Capacity-cur_len : 0, fmt, args);
+    STR_ASSERT(app_len >= 0);
+
+    if (Capacity < len+1)
+    {
+        reserve_discard(cur_len+app_len+1);
+        app_len = vsnprintf(Data+cur_len, app_len+1, fmt, args2);
+    }
+#endif
+
+    Owned = 1;
+    return app_len;
+}
+
+int     Str::appendf(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    int len = appendfv(fmt, args);
     va_end(args);
     return len;
 }
