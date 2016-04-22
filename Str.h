@@ -1,4 +1,4 @@
-// Str v0.12
+// Str v0.20
 // Simple c++ string type with an optional local buffer
 // https://github.com/ocornut/str
 
@@ -93,7 +93,7 @@ public:
 	inline char*		c_str()									{ return Data; }
     inline const char*  c_str() const                           { return Data; }
     inline bool         empty() const                           { return Data[0] == 0; }
-    inline int          length() const                          { return strlen(Data); }    // by design, but we could maintain it?
+    inline int          length() const                          { return strlen(Data); }    // by design, allow user to write into the buffer at any time
     inline int          capacity() const                        { return Capacity; }
 
     inline void         set_ref(const char* src);
@@ -101,6 +101,7 @@ public:
     int                 setfv(const char* fmt, va_list args);
     int                 setf_nogrow(const char* fmt, ...);
     int                 setfv_nogrow(const char* fmt, va_list args);
+	int					append(const char* s, const char* s_end = NULL);
 	int					appendf(const char* fmt, ...);
 	int					appendfv(const char* fmt, va_list args);
 
@@ -116,6 +117,7 @@ public:
     inline Str();
     inline Str(const char* rhs);
     inline void         set(const char* src);
+    inline void         set(const char* src, const char* src_end);
     inline Str&         operator=(const char* rhs)              { set(rhs); return *this; }
     inline bool         operator==(const char* rhs) const       { return strcmp(c_str(), rhs) == 0; }
 
@@ -137,6 +139,8 @@ public:
 		if (Owned && !is_using_local_buf())
 			STR_MEMFREE(Data);
 	}
+
+	static char*		EmptyBuffer;
 
 protected:
     inline char*        local_buf()                             { return (char*)this + sizeof(Str); }
@@ -161,6 +165,17 @@ void    Str::set(const char* src)
     if ((int)Capacity < buf_len)
         reserve_discard(buf_len);
     memcpy(Data, src, buf_len);
+    Owned = 1;
+}
+
+void    Str::set(const char* src, const char* src_end)
+{
+	STR_ASSERT(src_end >= src);
+    int buf_len = (int)(src_end-src)+1;
+    if ((int)Capacity < buf_len)
+        reserve_discard(buf_len);
+    memcpy(Data, src, buf_len-1);
+	Data[buf_len] = 0;
     Owned = 1;
 }
 
@@ -195,7 +210,7 @@ inline void Str::set_ref(const char* src)
 
 Str::Str()
 {
-    Data = "";      // Shared read-only initial buffer for 0 capacity
+    Data = EmptyBuffer;      // Shared READ-ONLY initial buffer for 0 capacity
     Capacity = 0;
     LocalBufSize = 0;
     Owned = 0;
@@ -203,7 +218,7 @@ Str::Str()
 
 Str::Str(const Str& rhs)
 {
-    Data = "";
+    Data = EmptyBuffer;
     Capacity = 0;
     LocalBufSize = 0;
     Owned = 0;
@@ -212,7 +227,7 @@ Str::Str(const Str& rhs)
 
 Str::Str(const char* rhs)
 {
-    Data = "";
+    Data = EmptyBuffer;
     Capacity = 0;
     LocalBufSize = 0;
     Owned = 0;
@@ -222,7 +237,7 @@ Str::Str(const char* rhs)
 #if STR_SUPPORT_STD_STRING
 Str::Str(const std::string& rhs)
 {
-    Data = "";
+    Data = EmptyBuffer;
     Capacity = 0;
     LocalBufSize = 0;
     Owned = 0;
@@ -248,7 +263,9 @@ class TYPENAME : public Str                                                     
 public:                                                                             \
     TYPENAME() : Str(LOCALBUFSIZE) {}                                               \
     TYPENAME(const Str& rhs) : Str(LOCALBUFSIZE) { set(rhs); }                      \
+    TYPENAME(const char* rhs) : Str(LOCALBUFSIZE) { set(rhs); }                     \
     TYPENAME(const TYPENAME& rhs) : Str(LOCALBUFSIZE) { set(rhs); }                 \
+    TYPENAME(const std::string& rhs) : Str(LOCALBUFSIZE) { set(rhs); }              \
     TYPENAME&   operator=(const char* rhs)          { set(rhs); return *this; }     \
     TYPENAME&   operator=(const Str& rhs)           { set(rhs); return *this; }     \
     TYPENAME&   operator=(const TYPENAME& rhs)      { set(rhs); return *this; }     \
@@ -264,6 +281,7 @@ class TYPENAME : public Str                                                     
 public:                                                                             \
     TYPENAME() : Str(LOCALBUFSIZE) {}                                               \
     TYPENAME(const Str& rhs) : Str(LOCALBUFSIZE) { set(rhs); }                      \
+    TYPENAME(const char* rhs) : Str(LOCALBUFSIZE) { set(rhs); }                     \
     TYPENAME(const TYPENAME& rhs) : Str(LOCALBUFSIZE) { set(rhs); }                 \
     TYPENAME&   operator=(const char* rhs)          { set(rhs); return *this; }     \
     TYPENAME&   operator=(const Str& rhs)           { set(rhs); return *this; }     \
@@ -272,11 +290,20 @@ public:                                                                         
 
 #endif
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-private-field"         // warning : private field 'local_buf' is not used
+#endif
+
 // Declaring a few types here
 STR_DEFINETYPE(Str16, 16)
 STR_DEFINETYPE(Str32, 32)
 STR_DEFINETYPE(Str64, 64)
 STR_DEFINETYPE(Str128, 128)
 STR_DEFINETYPE(Str256, 256)
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 //-------------------------------------------------------------------------

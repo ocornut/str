@@ -1,4 +1,4 @@
-// Str v0.11
+// Str v0.20
 // Simple c++ string type with an optional local buffer
 // https://github.com/ocornut/str
 
@@ -16,6 +16,10 @@
 #define va_copy(dest, src) (dest = src)
 #endif
 
+// Static empty buffer we can point to for empty strings
+// Pointing to a literal is a nice idea because it increase of like-hood of getting a crash if someone attempts to write in the empty string buffer. 
+char*	Str::EmptyBuffer = (char*)"\0NULL";
+
 // Clear 
 void    Str::clear()
 {
@@ -30,7 +34,7 @@ void    Str::clear()
     }
     else
     {
-        Data = "";
+        Data = EmptyBuffer;
         Capacity = 0;
         Owned = 0;
     }
@@ -159,6 +163,19 @@ int     Str::setf_nogrow(const char* fmt, ...)
     return len;
 }
 
+int		Str::append(const char* s, const char* s_end)
+{
+	if (!s_end)
+		s_end = s + strlen(s);
+	int cur_len = length();
+	int add_len = (int)(s_end - s);
+    if (Capacity < cur_len + add_len + 1)
+        reserve(cur_len + add_len + 1);
+	memcpy(Data+cur_len, (const void*)s, add_len+1);
+	Owned = 1;
+    return add_len;
+}
+
 // FIXME: merge setfv() and appendfv()?
 int     Str::appendfv(const char* fmt, va_list args)
 {
@@ -171,26 +188,26 @@ int     Str::appendfv(const char* fmt, va_list args)
     // MSVC returns -1 on overflow when writing, which forces us to do two passes
     // FIXME-OPT: Find a way around that.
 #ifdef _MSC_VER
-    int app_len = vsnprintf(NULL, 0, fmt, args);
-    STR_ASSERT(app_len >= 0);
+    int add_len = vsnprintf(NULL, 0, fmt, args);
+    STR_ASSERT(add_len >= 0);
 
-    if (Capacity < cur_len+app_len+1)
-        reserve(cur_len+app_len+1);
-    app_len = vsnprintf(Data+cur_len, app_len+1, fmt, args2);
+    if (Capacity < cur_len+add_len+1)
+        reserve(cur_len+add_len+1);
+    add_len = vsnprintf(Data+cur_len, add_len+1, fmt, args2);
 #else
     // First try
-    int app_len = vsnprintf(Owned ? Data+cur_len : NULL, Owned ? Capacity-cur_len : 0, fmt, args);
-    STR_ASSERT(app_len >= 0);
+    int add_len = vsnprintf(Owned ? Data+cur_len : NULL, Owned ? Capacity-cur_len : 0, fmt, args);
+    STR_ASSERT(add_len >= 0);
 
-    if (Capacity < len+1)
+    if (Capacity < cur_len+add_len+1)
     {
-        reserve_discard(cur_len+app_len+1);
-        app_len = vsnprintf(Data+cur_len, app_len+1, fmt, args2);
+        reserve(cur_len+add_len+1);
+        add_len = vsnprintf(Data+cur_len, add_len+1, fmt, args2);
     }
 #endif
 
     Owned = 1;
-    return app_len;
+    return add_len;
 }
 
 int     Str::appendf(const char* fmt, ...)
