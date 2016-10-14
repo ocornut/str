@@ -2,7 +2,7 @@ Simple c++ string type with an optional local buffer
 
 ```
 Str
-Simple c++ string type with an optional local buffer
+Simple c++ string type with an optional local buffer, by omar cornut
 https://github.com/ocornut/str
 
 LICENSE
@@ -10,12 +10,13 @@ This software is in the public domain. Where that dedication is not
 recognized, you are granted a perpetual, irrevocable license to copy,
 distribute, and modify this file as you see fit.
 
-- This isn't a fully featured string class.
+- This isn't a fully featured string class. 
+- It is a simple, bearable replacement to std::string that isn't heap abusive nor bloated (can actually be debugged by humans).
 - String are mutable. We don't maintain size so length() is not-constant time. 
-- Maximum string size currently limited to 2 MB (we allocate 21 bits to hold capacity)
-- Local buffer size is currently limited to 1023 bytes (we allocate 10 bits to hold local buffer size)
+- Maximum string size currently limited to 2 MB (we allocate 21 bits to hold capacity).
+- Local buffer size is currently limited to 1023 bytes (we allocate 10 bits to hold local buffer size).
 - In "non-owned" mode for literals/reference we don't do any tracking/counting of references.
-- Overhead is 8-bytes in 32-bits, 16-bits in 64-bits (12 + alignment)
+- Overhead is 8-bytes in 32-bits, 16-bits in 64-bits (12 + alignment).
 - This code hasn't been tested very much. it is probably incomplete or broken. Made it for my own use.
 
 The idea is that you can provide an arbitrary sized local buffer if you expect string to fit 
