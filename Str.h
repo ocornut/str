@@ -1,4 +1,4 @@
-// Str v0.21
+// Str v0.22
 // Simple c++ string type with an optional local buffer, by omar cornut
 // https://github.com/ocornut/str
 
@@ -20,16 +20,16 @@
 The idea is that you can provide an arbitrary sized local buffer if you expect string to fit
 most of the time, and then you avoid using costly heap.
 
-No local buffer, always use heap, sizeof()==8/16 (depends if your pointers are 32-bits or 64-bits)
+No local buffer, always use heap, sizeof()==8~16 (depends if your pointers are 32-bits or 64-bits)
 
    Str s = "hey";
 
-With a local buffer of 16 bytes, sizeof() == 8/16+16 bytes.
+With a local buffer of 16 bytes, sizeof() == 8~16 + 16 bytes.
 
    Str16 s = "filename.h"; // copy into local buffer
    Str16 s = "long_filename_not_very_long_but_longer_than_expected.h";   // use heap
 
-With a local buffer of 256 bytes, sizeof() == 8/16+256 bytes.
+With a local buffer of 256 bytes, sizeof() == 8~16 + 256 bytes.
 
    Str256 s = "long_filename_not_very_long_but_longer_than_expected.h";  // copy into local buffer
 
@@ -70,20 +70,21 @@ TODO
 
 // Configuration
 #ifndef STR_MEMALLOC
-#define STR_MEMALLOC            malloc
+#define STR_MEMALLOC  malloc
 #endif
 #ifndef STR_MEMFREE
-#define STR_MEMFREE             free
+#define STR_MEMFREE   free
 #endif
 #ifndef STR_ASSERT
-#define STR_ASSERT              assert
+#define STR_ASSERT    assert
 #include <assert.h>
 #endif
+#include <stdarg.h>   // for va_list
+
+// Configuration: #define STR_SUPPORT_STD_STRING 0 to disable setters variants using const std::string& (on by default)
 #ifndef STR_SUPPORT_STD_STRING
 #define STR_SUPPORT_STD_STRING  1
 #endif
-
-#include <stdarg.h>             // va_list
 
 #ifdef STR_SUPPORT_STD_STRING
 #include <string>
@@ -96,7 +97,7 @@ class Str
     char*               Data;                   // Point to LocalBuf() or heap allocated
     int                 Capacity : 21;          // Max 2 MB
     int                 LocalBufSize : 10;      // Max 1023 bytes
-    unsigned int        Owned : 1;              // 
+    unsigned int        Owned : 1;              // Set when we have ownership of the pointed data (most common, unless using set_ref() method or StrRef constructor)
 
 public:
     inline char*        c_str()                                 { return Data; }
@@ -265,7 +266,7 @@ public:
 // NB: we need to override the constructor and = operator for both Str& and TYPENAME (without the later compiler will call a default copy operator)
 #if STR_SUPPORT_STD_STRING
 
-#define STR_DEFINETYPE(TYPENAME, TYPENAME_F, LOCALBUFSIZE)                                      \
+#define STR_DEFINETYPE(TYPENAME, LOCALBUFSIZE)                                      \
 class TYPENAME : public Str                                                         \
 {                                                                                   \
     char local_buf[LOCALBUFSIZE];                                                   \
@@ -279,11 +280,6 @@ public:                                                                         
     TYPENAME&   operator=(const Str& rhs)           { set(rhs); return *this; }     \
     TYPENAME&   operator=(const TYPENAME& rhs)      { set(rhs); return *this; }     \
     TYPENAME&   operator=(const std::string& rhs)   { set(rhs); return *this; }     \
-};                                                                                  \
-class TYPENAME_F : public TYPENAME                                                  \
-{                                                                                   \
-public:                                                                             \
-    TYPENAME_F(const char* fmt, ...) : TYPENAME() { va_list args; va_start(args, fmt); setfv(fmt, args); va_end(args); } \
 };
 
 #else
@@ -304,18 +300,34 @@ public:                                                                         
 
 #endif
 
+// Helper to define StrXXXf constructors
+#define STR_DEFINETYPE_F(TYPENAME, TYPENAME_F)                                      \
+class TYPENAME_F : public TYPENAME                                                  \
+{                                                                                   \
+public:                                                                             \
+    TYPENAME_F(const char* fmt, ...) : TYPENAME() { va_list args; va_start(args, fmt); setfv(fmt, args); va_end(args); } \
+};
+
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-private-field"         // warning : private field 'local_buf' is not used
 #endif
 
-// Declaring a few types here
-STR_DEFINETYPE(Str16, Str16f, 16)
-STR_DEFINETYPE(Str32, Str32f, 32)
-STR_DEFINETYPE(Str64, Str64f, 64)
-STR_DEFINETYPE(Str128, Str128f, 128)
-STR_DEFINETYPE(Str256, Str256f, 256)
-STR_DEFINETYPE(Str512, Str512f, 512)
+// Declaring types for common sizes here
+STR_DEFINETYPE(Str16, 16)
+STR_DEFINETYPE(Str32, 32)
+STR_DEFINETYPE(Str64, 64)
+STR_DEFINETYPE(Str128, 128)
+STR_DEFINETYPE(Str256, 256)
+STR_DEFINETYPE(Str512, 512)
+
+// Declaring helper constructors to pass in format strings in one statement
+STR_DEFINETYPE_F(Str16, Str16f)
+STR_DEFINETYPE_F(Str32, Str32f)
+STR_DEFINETYPE_F(Str64, Str64f)
+STR_DEFINETYPE_F(Str128, Str128f)
+STR_DEFINETYPE_F(Str256, Str256f)
+STR_DEFINETYPE_F(Str512, Str512f)
 
 #ifdef __clang__
 #pragma clang diagnostic pop

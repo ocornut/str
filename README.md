@@ -22,16 +22,16 @@ distribute, and modify this file as you see fit.
 The idea is that you can provide an arbitrary sized local buffer if you expect string to fit 
 most of the time, and then you avoid using costly heap.
 
-No local buffer, always use heap, sizeof()==8/16 (depends if your pointers are 32-bits or 64-bits)
+No local buffer, always use heap, sizeof()==8~16 (depends if your pointers are 32-bits or 64-bits)
 
    Str s = "hey";
 
-With a local buffer of 16 bytes, sizeof() == 8/16+16 bytes.
+With a local buffer of 16 bytes, sizeof() == 8~16 + 16 bytes.
 
    Str16 s = "filename.h"; // copy into local buffer
    Str16 s = "long_filename_not_very_long_but_longer_than_expected.h";   // use heap
 
-With a local buffer of 256 bytes, sizeof() == 8/16+256 bytes.
+With a local buffer of 256 bytes, sizeof() == 8~16 + 256 bytes.
 
    Str256 s = "long_filename_not_very_long_but_longer_than_expected.h";  // copy into local buffer
 
