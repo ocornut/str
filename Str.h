@@ -1,4 +1,4 @@
-// Str v0.20
+// Str v0.21
 // Simple c++ string type with an optional local buffer
 // https://github.com/ocornut/str
 
@@ -36,6 +36,11 @@ Format string helpers:
 
    Str256 filename;
    filename.setf("%s/%s.tmp", folder, filename);
+
+For format string _constructors_ add a trailing 'f' to the type. Underlying type is the same.
+
+   Str256f filename("%s/%s.tmp", folder, filename);             // construct
+   fopen(Str256f("%s/%s.tmp, folder, filename).c_str(), "rb");  // construct, use as function param, destruct
 
 You can pass your StrXXX* as a Str* to functions and it will still be functional. 
 
@@ -75,6 +80,8 @@ TODO
 #ifndef STR_SUPPORT_STD_STRING
 #define STR_SUPPORT_STD_STRING  1
 #endif
+
+#include <stdarg.h>             // va_list
 
 #ifdef STR_SUPPORT_STD_STRING
 #include <string>
@@ -256,7 +263,7 @@ public:
 // NB: we need to override the constructor and = operator for both Str& and TYPENAME (without the later compiler will call a default copy operator)
 #if STR_SUPPORT_STD_STRING
 
-#define STR_DEFINETYPE(TYPENAME, LOCALBUFSIZE)                                      \
+#define STR_DEFINETYPE(TYPENAME, TYPENAME_F, LOCALBUFSIZE)                                      \
 class TYPENAME : public Str                                                         \
 {                                                                                   \
     char local_buf[LOCALBUFSIZE];                                                   \
@@ -270,7 +277,12 @@ public:                                                                         
     TYPENAME&   operator=(const Str& rhs)           { set(rhs); return *this; }     \
     TYPENAME&   operator=(const TYPENAME& rhs)      { set(rhs); return *this; }     \
     TYPENAME&   operator=(const std::string& rhs)   { set(rhs); return *this; }     \
-};                                                                                  
+};                                                                                  \
+class TYPENAME_F : public TYPENAME                                                  \
+{                                                                                   \
+public:                                                                             \
+    TYPENAME_F(const char* fmt, ...) : TYPENAME() { va_list args; va_start(args, fmt); setfv(fmt, args); va_end(args); } \
+};
 
 #else
 
@@ -296,11 +308,12 @@ public:                                                                         
 #endif
 
 // Declaring a few types here
-STR_DEFINETYPE(Str16, 16)
-STR_DEFINETYPE(Str32, 32)
-STR_DEFINETYPE(Str64, 64)
-STR_DEFINETYPE(Str128, 128)
-STR_DEFINETYPE(Str256, 256)
+STR_DEFINETYPE(Str16, Str16f, 16)
+STR_DEFINETYPE(Str32, Str32f, 32)
+STR_DEFINETYPE(Str64, Str64f, 64)
+STR_DEFINETYPE(Str128, Str128f, 128)
+STR_DEFINETYPE(Str256, Str256f, 256)
+STR_DEFINETYPE(Str512, Str512f, 512)
 
 #ifdef __clang__
 #pragma clang diagnostic pop
