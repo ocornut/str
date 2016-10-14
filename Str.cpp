@@ -1,5 +1,5 @@
 // Str v0.21
-// Simple c++ string type with an optional local buffer
+// Simple c++ string type with an optional local buffer, by omar cornut
 // https://github.com/ocornut/str
 
 // LICENSE
@@ -16,7 +16,7 @@
 #endif
 
 // Static empty buffer we can point to for empty strings
-// Pointing to a literal is a nice idea because it increase of like-hood of getting a crash if someone attempts to write in the empty string buffer. 
+// Pointing to a literal increases the like-hood of getting a crash if someone attempts to write in the empty string buffer. 
 char*	Str::EmptyBuffer = (char*)"\0NULL";
 
 // Clear 

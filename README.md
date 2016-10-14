@@ -21,34 +21,40 @@ distribute, and modify this file as you see fit.
 The idea is that you can provide an arbitrary sized local buffer if you expect string to fit 
 most of the time, and then you avoid using costly heap.
 
-No local buffer, always use heap, sizeof()==8/16
+No local buffer, always use heap, sizeof()==8/16 (depends if your pointers are 32-bits or 64-bits)
 
    Str s = "hey";
 
-Local buffer of 16 bytes, sizeof() == 8/16+16 bytes.
+With a local buffer of 16 bytes, sizeof() == 8/16+16 bytes.
 
    Str16 s = "filename.h"; // copy into local buffer
    Str16 s = "long_filename_not_very_long_but_longer_than_expected.h";   // use heap
 
-Local buffer of 256 bytes, sizeof() == 8/16+256 bytes.
+With a local buffer of 256 bytes, sizeof() == 8/16+256 bytes.
 
-   Str256 s = "long_filename_not_very_long_but_longer_than_expected.h";  // copy into local bufer
+   Str256 s = "long_filename_not_very_long_but_longer_than_expected.h";  // copy into local buffer
 
-Format string helpers:
+Common sizes are defined at the bottom of Str.h, you may define your own.
+All StrXXX types derives from Str. So you can pass e.g. Str256* to a function taking Str* and it will be functional.
 
-   Str256 filename;
-   filename.setf("%s/%s.tmp", folder, filename);
+Functions:
 
-You can pass your StrXXX* as a Str* to functions and it will still be functional. 
+   Str256 s;
+   s.set("hello sailor");                   // set (copy)
+   s.setf("%s/%s.tmp", folder, filename);   // set (format)
+   s.append("hello");                       // append. cost a length() calculation!
+   s.appendf("hello %d", 42);               // append formmated. cost a length() calculation!
+   s.set_ref("Hey!");                       // set (literal/reference, just copy pointer, no tracking)
 
-You can also copy references/literal pointer without allocation:
+Constructor helper for format string: add a trailing 'f' to the type. Underlying type is the same.
 
-   Str s;
-   s.set_ref("hey!");	// setter for literals/references
-   
-Or via the helper constructor
+   Str256f filename("%s/%s.tmp", folder, filename);             // construct
+   fopen(Str256f("%s/%s.tmp, folder, filename).c_str(), "rb");  // construct, use as function param, destruct
 
-   StrRef("hey!");		// constructor for literals/reference
+Constructor helper for reference/literal:
+
+	StrRef ref("literal");           // copy pointer, no allocation, no string copy
+	StrRef ref2(GetDebugName());	 // copy pointer. no tracking of anything whatsoever, know what you are doing!
 
 (Using a template e.g. Str<N> we could remove the LocalBufSize storage but it would make passing 
 typed Str<> to functions tricky. Instead we don't use template so you can pass them around as
