@@ -99,7 +99,7 @@ class Str
     unsigned int        Owned : 1;              // 
 
 public:
-	inline char*		c_str()									{ return Data; }
+    inline char*		c_str()									{ return Data; }
     inline const char*  c_str() const                           { return Data; }
     inline bool         empty() const                           { return Data[0] == 0; }
     inline int          length() const                          { return strlen(Data); }    // by design, allow user to write into the buffer at any time
@@ -110,9 +110,9 @@ public:
     int                 setfv(const char* fmt, va_list args);
     int                 setf_nogrow(const char* fmt, ...);
     int                 setfv_nogrow(const char* fmt, va_list args);
-	int					append(const char* s, const char* s_end = NULL);
-	int					appendf(const char* fmt, ...);
-	int					appendfv(const char* fmt, va_list args);
+    int					append(const char* s, const char* s_end = NULL);
+    int					appendf(const char* fmt, ...);
+    int					appendfv(const char* fmt, va_list args);
 
     void                clear();
     void                reserve(int cap);
@@ -142,14 +142,14 @@ public:
     inline bool         operator==(const std::string& rhs)const { return strcmp(c_str(), rhs.c_str()) == 0; }
 #endif
 
-	// Destructor for all variants
-	inline ~Str()
-	{
-		if (Owned && !is_using_local_buf())
-			STR_MEMFREE(Data);
-	}
+    // Destructor for all variants
+    inline ~Str()
+    {
+        if (Owned && !is_using_local_buf())
+            STR_MEMFREE(Data);
+    }
 
-	static char*		EmptyBuffer;
+    static char*		EmptyBuffer;
 
 protected:
     inline char*        local_buf()                             { return (char*)this + sizeof(Str); }
@@ -179,12 +179,12 @@ void    Str::set(const char* src)
 
 void    Str::set(const char* src, const char* src_end)
 {
-	STR_ASSERT(src_end >= src);
+    STR_ASSERT(src_end >= src);
     int buf_len = (int)(src_end-src)+1;
     if ((int)Capacity < buf_len)
         reserve_discard(buf_len);
     memcpy(Data, src, buf_len-1);
-	Data[buf_len] = 0;
+    Data[buf_len] = 0;
     Owned = 1;
 }
 

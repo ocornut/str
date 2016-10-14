@@ -164,14 +164,14 @@ int     Str::setf_nogrow(const char* fmt, ...)
 
 int		Str::append(const char* s, const char* s_end)
 {
-	if (!s_end)
-		s_end = s + strlen(s);
-	int cur_len = length();
-	int add_len = (int)(s_end - s);
+    if (!s_end)
+        s_end = s + strlen(s);
+    int cur_len = length();
+    int add_len = (int)(s_end - s);
     if (Capacity < cur_len + add_len + 1)
         reserve(cur_len + add_len + 1);
-	memcpy(Data+cur_len, (const void*)s, add_len+1);
-	Owned = 1;
+    memcpy(Data+cur_len, (const void*)s, add_len+1);
+    Owned = 1;
     return add_len;
 }
 
@@ -182,7 +182,7 @@ int     Str::appendfv(const char* fmt, va_list args)
     va_list args2;
     va_copy(args2, args);
 
-	int cur_len = length();
+    int cur_len = length();
 
     // MSVC returns -1 on overflow when writing, which forces us to do two passes
     // FIXME-OPT: Find a way around that.
