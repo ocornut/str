@@ -17,7 +17,7 @@
 
 // Static empty buffer we can point to for empty strings
 // Pointing to a literal increases the like-hood of getting a crash if someone attempts to write in the empty string buffer. 
-char*	Str::EmptyBuffer = (char*)"\0NULL";
+char*   Str::EmptyBuffer = (char*)"\0NULL";
 
 // Clear 
 void    Str::clear()
@@ -162,7 +162,7 @@ int     Str::setf_nogrow(const char* fmt, ...)
     return len;
 }
 
-int		Str::append(const char* s, const char* s_end)
+int     Str::append(const char* s, const char* s_end)
 {
     if (!s_end)
         s_end = s + strlen(s);

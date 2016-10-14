@@ -99,7 +99,7 @@ class Str
     unsigned int        Owned : 1;              // 
 
 public:
-    inline char*		c_str()									{ return Data; }
+    inline char*        c_str()                                 { return Data; }
     inline const char*  c_str() const                           { return Data; }
     inline bool         empty() const                           { return Data[0] == 0; }
     inline int          length() const                          { return strlen(Data); }    // by design, allow user to write into the buffer at any time
@@ -110,9 +110,9 @@ public:
     int                 setfv(const char* fmt, va_list args);
     int                 setf_nogrow(const char* fmt, ...);
     int                 setfv_nogrow(const char* fmt, va_list args);
-    int					append(const char* s, const char* s_end = NULL);
-    int					appendf(const char* fmt, ...);
-    int					appendfv(const char* fmt, va_list args);
+    int                 append(const char* s, const char* s_end = NULL);
+    int                 appendf(const char* fmt, ...);
+    int                 appendfv(const char* fmt, va_list args);
 
     void                clear();
     void                reserve(int cap);
@@ -149,7 +149,7 @@ public:
             STR_MEMFREE(Data);
     }
 
-    static char*		EmptyBuffer;
+    static char*        EmptyBuffer;
 
 protected:
     inline char*        local_buf()                             { return (char*)this + sizeof(Str); }
