@@ -40,20 +40,20 @@ Functions:
 
    Str256 s;
    s.set("hello sailor");                   // set (copy)
-   s.setf("%s/%s.tmp", folder, filename);   // set (format)
+   s.setf("%s/%s.tmp", folder, filename);   // set (w/format)
    s.append("hello");                       // append. cost a length() calculation!
-   s.appendf("hello %d", 42);               // append formmated. cost a length() calculation!
+   s.appendf("hello %d", 42);               // append (w/format). cost a length() calculation!
    s.set_ref("Hey!");                       // set (literal/reference, just copy pointer, no tracking)
 
 Constructor helper for format string: add a trailing 'f' to the type. Underlying type is the same.
 
-   Str256f filename("%s/%s.tmp", folder, filename);             // construct
-   fopen(Str256f("%s/%s.tmp, folder, filename).c_str(), "rb");  // construct, use as function param, destruct
+   Str256f filename("%s/%s.tmp", folder, filename);             // construct (w/format)
+   fopen(Str256f("%s/%s.tmp, folder, filename).c_str(), "rb");  // construct (w/format), use as function param, destruct
 
 Constructor helper for reference/literal:
 
    StrRef ref("literal");           // copy pointer, no allocation, no string copy
-   StrRef ref2(GetDebugName());	 // copy pointer. no tracking of anything whatsoever, know what you are doing!
+   StrRef ref2(GetDebugName());     // copy pointer. no tracking of anything whatsoever, know what you are doing!
 
 (Using a template e.g. Str<N> we could remove the LocalBufSize storage but it would make passing
 typed Str<> to functions tricky. Instead we don't use template so you can pass them around as
