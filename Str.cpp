@@ -170,7 +170,8 @@ int     Str::append(const char* s, const char* s_end)
     int add_len = (int)(s_end - s);
     if (Capacity < cur_len + add_len + 1)
         reserve(cur_len + add_len + 1);
-    memcpy(Data+cur_len, (const void*)s, add_len+1);
+    memcpy(Data+idx, (const void*)s, add_len);
+	Data[idx + add_len] = 0; // Our source data isn't necessarily zero-terminated
     Owned = 1;
     return add_len;
 }
