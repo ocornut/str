@@ -105,7 +105,7 @@ public:
     inline char*        c_str()                                 { return Data; }
     inline const char*  c_str() const                           { return Data; }
     inline bool         empty() const                           { return Data[0] == 0; }
-    inline int          length() const                          { return strlen(Data); }    // by design, allow user to write into the buffer at any time
+    inline int          length() const                          { return (int)strlen(Data); }    // by design, allow user to write into the buffer at any time
     inline int          capacity() const                        { return Capacity; }
 
     inline void         set_ref(const char* src);
@@ -173,7 +173,7 @@ protected:
 
 void    Str::set(const char* src)
 {
-    int buf_len = strlen(src)+1;
+    int buf_len = (int)strlen(src)+1;
     if ((int)Capacity < buf_len)
         reserve_discard(buf_len);
     memcpy(Data, src, buf_len);
@@ -193,7 +193,7 @@ void    Str::set(const char* src, const char* src_end)
 
 void    Str::set(const Str& src)
 {
-    int buf_len = strlen(src.c_str())+1;
+    int buf_len = (int)strlen(src.c_str())+1;
     if ((int)Capacity < buf_len)
         reserve_discard(buf_len);
     memcpy(Data, src.c_str(), buf_len);
