@@ -1,4 +1,4 @@
-// Str v0.22
+// Str v0.23
 // Simple c++ string type with an optional local buffer, by omar cornut
 // https://github.com/ocornut/str
 
@@ -162,14 +162,24 @@ int     Str::setf_nogrow(const char* fmt, ...)
     return len;
 }
 
-int     Str::append(const char* s, const char* s_end)
+int     Str::append_from(int idx, char c)
+{
+	int add_len = 1;
+	if (Capacity < idx + add_len + 1)
+		reserve(idx + add_len + 1);
+	Data[idx] = c;
+	Data[idx + add_len] = 0;
+	Owned = 1;
+	return add_len;
+}
+
+int     Str::append_from(int idx, const char* s, const char* s_end)
 {
     if (!s_end)
         s_end = s + strlen(s);
-    int cur_len = length();
     int add_len = (int)(s_end - s);
-    if (Capacity < cur_len + add_len + 1)
-        reserve(cur_len + add_len + 1);
+    if (Capacity < idx + add_len + 1)
+        reserve(idx + add_len + 1);
     memcpy(Data+idx, (const void*)s, add_len);
 	Data[idx + add_len] = 0; // Our source data isn't necessarily zero-terminated
     Owned = 1;
@@ -177,13 +187,11 @@ int     Str::append(const char* s, const char* s_end)
 }
 
 // FIXME: merge setfv() and appendfv()?
-int     Str::appendfv(const char* fmt, va_list args)
+int     Str::appendfv_from(int idx, const char* fmt, va_list args)
 {
     // Needed for portability on platforms where va_list are passed by reference and modified by functions
     va_list args2;
     va_copy(args2, args);
-
-    int cur_len = length();
 
     // MSVC returns -1 on overflow when writing, which forces us to do two passes
     // FIXME-OPT: Find a way around that.
@@ -191,18 +199,18 @@ int     Str::appendfv(const char* fmt, va_list args)
     int add_len = vsnprintf(NULL, 0, fmt, args);
     STR_ASSERT(add_len >= 0);
 
-    if (Capacity < cur_len+add_len+1)
-        reserve(cur_len+add_len+1);
-    add_len = vsnprintf(Data+cur_len, add_len+1, fmt, args2);
+    if (Capacity < idx+add_len+1)
+        reserve(idx +add_len+1);
+    add_len = vsnprintf(Data+idx, add_len+1, fmt, args2);
 #else
     // First try
-    int add_len = vsnprintf(Owned ? Data+cur_len : NULL, Owned ? Capacity-cur_len : 0, fmt, args);
+    int add_len = vsnprintf(Owned ? Data+idx : NULL, Owned ? Capacity-idx : 0, fmt, args);
     STR_ASSERT(add_len >= 0);
 
     if (Capacity < cur_len+add_len+1)
     {
-        reserve(cur_len+add_len+1);
-        add_len = vsnprintf(Data+cur_len, add_len+1, fmt, args2);
+        reserve(idx+add_len+1);
+        add_len = vsnprintf(Data+idx, add_len+1, fmt, args2);
     }
 #endif
 
@@ -210,11 +218,38 @@ int     Str::appendfv(const char* fmt, va_list args)
     return add_len;
 }
 
-int     Str::appendf(const char* fmt, ...)
+int     Str::appendf_from(int idx, const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    int len = appendfv(fmt, args);
+    int len = appendfv_from(idx, fmt, args);
     va_end(args);
     return len;
+}
+
+int     Str::append(char c)
+{
+	int cur_len = length();
+	return append_from(cur_len, c);
+}
+
+int     Str::append(const char* s, const char* s_end)
+{
+	int cur_len = length();
+	return append_from(cur_len, s, s_end);
+}
+
+int     Str::appendfv(const char* fmt, va_list args)
+{
+	int cur_len = length();
+	return appendfv_from(cur_len, fmt, args);
+}
+
+int     Str::appendf(const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	int len = appendfv(fmt, args);
+	va_end(args);
+	return len;
 }
