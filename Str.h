@@ -71,9 +71,11 @@ TODO
 // Configuration
 #ifndef STR_MEMALLOC
 #define STR_MEMALLOC  malloc
+#include <stdlib.h>
 #endif
 #ifndef STR_MEMFREE
 #define STR_MEMFREE   free
+#include <stdlib.h>
 #endif
 #ifndef STR_ASSERT
 #define STR_ASSERT    assert
