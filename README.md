@@ -36,7 +36,6 @@ With a local buffer of 256 bytes, sizeof() == 8~16 + 256 bytes.
    Str256 s = "long_filename_not_very_long_but_longer_than_expected.h";  // copy into local buffer
 
 Common sizes are defined at the bottom of Str.h, you may define your own.
-All StrXXX types derives from Str. So you can pass e.g. Str256* to a function taking Str* and it will be functional.
 
 Functions:
 
@@ -54,10 +53,13 @@ Constructor helper for format string: add a trailing 'f' to the type. Underlying
 
 Constructor helper for reference/literal:
 
-	StrRef ref("literal");           // copy pointer, no allocation, no string copy
-	StrRef ref2(GetDebugName());	 // copy pointer. no tracking of anything whatsoever, know what you are doing!
+   StrRef ref("literal");                   // copy pointer, no allocation, no string copy
+   StrRef ref2(GetDebugName());             // copy pointer. no tracking of anything whatsoever, know what you are doing!
 
-(Using a template e.g. Str<N> we could remove the LocalBufSize storage but it would make passing 
-typed Str<> to functions tricky. Instead we don't use template so you can pass them around as
-the base type Str*. Also, templates are ugly.)
+All StrXXX types derives from Str and instance hold the local buffer capacity. So you can pass e.g. Str256* to a function taking base type Str* and it will be functional.
+
+   void MyFunc(Str& s) { s = "Hello"; }     // will use local buffer if available in Str instance
+
+(Using a template e.g. Str<N> we could remove the LocalBufSize storage but it would make passing typed Str<> to functions tricky.
+ Instead we don't use template so you can pass them around as the base type Str*. Also, templates are ugly.)
 ```
