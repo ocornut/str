@@ -1,4 +1,4 @@
-// Str v0.23
+// Str v0.25
 // Simple c++ string type with an optional local buffer, by omar cornut
 // https://github.com/ocornut/str
 
@@ -61,6 +61,15 @@ the base type Str*. Also, templates are ugly.)
 */
 
 /*
+ CHANGELOG
+  0.25 - allow set(const char* NULL) or operator= NULL to clear the string. not that set() from range or other types are not allowed.
+  0.24 - allow set_ref(const char* NULL) to clear the string. include fixes for linux.
+  0.23 - added append(char). added append_from(int idx, XXX) functions. fixed some compilers warnings.
+  0.22 - documentation improvements, comments. fixes for some compilers.
+  0.21 - added StrXXXf() constructor to construct directly from a format string. 
+*/
+
+/*
 TODO
 - Since we lose 4-bytes of padding on 64-bits architecture, perhaps just spread the header to 8-bytes and lift size limits? 
 - More functions/helpers.
@@ -90,6 +99,7 @@ TODO
 
 #ifdef STR_SUPPORT_STD_STRING
 #include <string>
+#include <string.h>
 #endif
 
 // This is the base class that you can pass around
@@ -178,6 +188,12 @@ protected:
 
 void    Str::set(const char* src)
 {
+    // We allow set(NULL) or via = operator to clear the string.
+    if (src == NULL)
+    {
+        clear();
+        return;
+    }
     int buf_len = (int)strlen(src)+1;
     if ((int)Capacity < buf_len)
         reserve_discard(buf_len);
@@ -187,7 +203,7 @@ void    Str::set(const char* src)
 
 void    Str::set(const char* src, const char* src_end)
 {
-    STR_ASSERT(src_end >= src);
+    STR_ASSERT(src != NULL && src_end >= src);
     int buf_len = (int)(src_end-src)+1;
     if ((int)Capacity < buf_len)
         reserve_discard(buf_len);
@@ -220,7 +236,7 @@ inline void Str::set_ref(const char* src)
 {
     if (Owned && !is_using_local_buf())
         STR_MEMFREE(Data);
-    Data = (char*)src;
+    Data = src ? (char*)src : EmptyBuffer;
     Capacity = 0;
     Owned = 0;
 }

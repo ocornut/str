@@ -1,4 +1,4 @@
-// Str v0.23
+// Str v0.25
 // Simple c++ string type with an optional local buffer, by omar cornut
 // https://github.com/ocornut/str
 
@@ -200,14 +200,14 @@ int     Str::appendfv_from(int idx, const char* fmt, va_list args)
     STR_ASSERT(add_len >= 0);
 
     if (Capacity < idx+add_len+1)
-        reserve(idx +add_len+1);
+        reserve(idx+add_len+1);
     add_len = vsnprintf(Data+idx, add_len+1, fmt, args2);
 #else
     // First try
     int add_len = vsnprintf(Owned ? Data+idx : NULL, Owned ? Capacity-idx : 0, fmt, args);
     STR_ASSERT(add_len >= 0);
 
-    if (Capacity < cur_len+add_len+1)
+    if (Capacity < idx+add_len+1)
     {
         reserve(idx+add_len+1);
         add_len = vsnprintf(Data+idx, add_len+1, fmt, args2);
