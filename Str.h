@@ -1,4 +1,4 @@
-// Str v0.25
+// Str v0.26
 // Simple c++ string type with an optional local buffer, by omar cornut
 // https://github.com/ocornut/str
 
@@ -64,7 +64,8 @@ All StrXXX types derives from Str and instance hold the local buffer capacity. S
 
 /*
  CHANGELOG
-  0.25 - allow set(const char* NULL) or operator= NULL to clear the string. not that set() from range or other types are not allowed.
+  0.26 - fixed set(cont char* src, const char* src_end) writing null terminator to the wrong position.
+  0.25 - allow set(const char* NULL) or operator= NULL to clear the string. note that set() from range or other types are not allowed.
   0.24 - allow set_ref(const char* NULL) to clear the string. include fixes for linux.
   0.23 - added append(char). added append_from(int idx, XXX) functions. fixed some compilers warnings.
   0.22 - documentation improvements, comments. fixes for some compilers.
@@ -210,7 +211,7 @@ void    Str::set(const char* src, const char* src_end)
     if ((int)Capacity < buf_len)
         reserve_discard(buf_len);
     memcpy(Data, src, buf_len-1);
-    Data[buf_len] = 0;
+    Data[buf_len-1] = 0;
     Owned = 1;
 }
 
