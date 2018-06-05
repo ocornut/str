@@ -14,7 +14,7 @@
 - Maximum string size currently limited to 2 MB (we allocate 21 bits to hold capacity).
 - Local buffer size is currently limited to 1023 bytes (we allocate 10 bits to hold local buffer size).
 - In "non-owned" mode for literals/reference we don't do any tracking/counting of references.
-- Overhead is 8-bytes in 32-bits, 16-bits in 64-bits (12 + alignment).
+- Overhead is 8-bytes in 32-bits, 16-bytes in 64-bits (12 + alignment).
 - This code hasn't been tested very much. it is probably incomplete or broken. Made it for my own use.
 
 The idea is that you can provide an arbitrary sized local buffer if you expect string to fit
