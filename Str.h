@@ -126,14 +126,14 @@ public:
     int                 setfv(const char* fmt, va_list args);
     int                 setf_nogrow(const char* fmt, ...);
     int                 setfv_nogrow(const char* fmt, va_list args);
-	int                 append(char c);
+    int                 append(char c);
     int                 append(const char* s, const char* s_end = NULL);
     int                 appendf(const char* fmt, ...);
     int                 appendfv(const char* fmt, va_list args);
-	int                 append_from(int idx, char c);
-	int                 append_from(int idx, const char* s, const char* s_end = NULL);		// If you know the string length or want to append from a certain point
-	int                 appendf_from(int idx, const char* fmt, ...);
-	int                 appendfv_from(int idx, const char* fmt, va_list args);
+    int                 append_from(int idx, char c);
+    int                 append_from(int idx, const char* s, const char* s_end = NULL);		// If you know the string length or want to append from a certain point
+    int                 appendf_from(int idx, const char* fmt, ...);
+    int                 appendfv_from(int idx, const char* fmt, va_list args);
 
     void                clear();
     void                reserve(int cap);
