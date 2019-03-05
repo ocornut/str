@@ -1,4 +1,4 @@
-// Str v0.26
+// Str v0.27
 // Simple c++ string type with an optional local buffer, by omar cornut
 // https://github.com/ocornut/str
 
@@ -64,6 +64,7 @@ All StrXXX types derives from Str and instance hold the local buffer capacity. S
 
 /*
  CHANGELOG
+  0.27 - added STR_API and basic natvis file.
   0.26 - fixed set(cont char* src, const char* src_end) writing null terminator to the wrong position.
   0.25 - allow set(const char* NULL) or operator= NULL to clear the string. note that set() from range or other types are not allowed.
   0.24 - allow set_ref(const char* NULL) to clear the string. include fixes for linux.
