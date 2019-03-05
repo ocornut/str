@@ -93,6 +93,9 @@ TODO
 #define STR_ASSERT    assert
 #include <assert.h>
 #endif
+#ifndef STR_API
+#define STR_API
+#endif
 #include <stdarg.h>   // for va_list
 
 // Configuration: #define STR_SUPPORT_STD_STRING 0 to disable setters variants using const std::string& (on by default)
@@ -107,7 +110,7 @@ TODO
 
 // This is the base class that you can pass around
 // Footprint is 8-bytes (32-bits arch) or 16-bytes (64-bits arch)
-class Str
+class STR_API Str
 {
     char*               Data;                   // Point to LocalBuf() or heap allocated
     int                 Capacity : 21;          // Max 2 MB
