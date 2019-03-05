@@ -1,4 +1,4 @@
-// Str v0.26
+// Str v0.28
 // Simple c++ string type with an optional local buffer, by omar cornut
 // https://github.com/ocornut/str
 
@@ -64,6 +64,8 @@ All StrXXX types derives from Str and instance hold the local buffer capacity. S
 
 /*
  CHANGELOG
+  0.28 - breaking change: replaced Str32 by Str30 to avoid collision with Str32 from MacTypes.h .
+  0.27 - added STR_API and basic natvis file.
   0.26 - fixed set(cont char* src, const char* src_end) writing null terminator to the wrong position.
   0.25 - allow set(const char* NULL) or operator= NULL to clear the string. note that set() from range or other types are not allowed.
   0.24 - allow set_ref(const char* NULL) to clear the string. include fixes for linux.
@@ -101,6 +103,11 @@ TODO
 // Configuration: #define STR_SUPPORT_STD_STRING 0 to disable setters variants using const std::string& (on by default)
 #ifndef STR_SUPPORT_STD_STRING
 #define STR_SUPPORT_STD_STRING  1
+#endif
+
+// Configuration: #define STR_DEFINE_STR32 1 to keep defining Str32/Str32f, but be warned: on macOS/iOS, MacTypes.h also defines a type named Str32.
+#ifndef STR_DEFINE_STR32
+#define STR_DEFINE_STR32 0
 #endif
 
 #ifdef STR_SUPPORT_STD_STRING
@@ -344,7 +351,7 @@ public:                                                                         
 
 // Declaring types for common sizes here
 STR_DEFINETYPE(Str16, 16)
-STR_DEFINETYPE(Str32, 32)
+STR_DEFINETYPE(Str30, 30)
 STR_DEFINETYPE(Str64, 64)
 STR_DEFINETYPE(Str128, 128)
 STR_DEFINETYPE(Str256, 256)
@@ -352,11 +359,16 @@ STR_DEFINETYPE(Str512, 512)
 
 // Declaring helper constructors to pass in format strings in one statement
 STR_DEFINETYPE_F(Str16, Str16f)
-STR_DEFINETYPE_F(Str32, Str32f)
+STR_DEFINETYPE_F(Str30, Str30f)
 STR_DEFINETYPE_F(Str64, Str64f)
 STR_DEFINETYPE_F(Str128, Str128f)
 STR_DEFINETYPE_F(Str256, Str256f)
 STR_DEFINETYPE_F(Str512, Str512f)
+
+#if STR_DEFINE_STR32
+STR_DEFINETYPE(Str32, 32)
+STR_DEFINETYPE_F(Str32, Str32f)
+#endif
 
 #ifdef __clang__
 #pragma clang diagnostic pop
