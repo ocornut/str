@@ -7,6 +7,10 @@
 // recognized, you are granted a perpetual, irrevocable license to copy,
 // distribute, and modify this file as you see fit.
 
+#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "Str.h"
 
 // On some platform vsnprintf() takes va_list by reference and modifies it.
