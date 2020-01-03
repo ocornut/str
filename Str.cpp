@@ -12,6 +12,7 @@
 #endif
 
 #include "Str.h"
+#include <string.h>
 
 // On some platform vsnprintf() takes va_list by reference and modifies it.
 // va_copy is the 'correct' way to copy a va_list but Visual Studio prior to 2013 doesn't have it.
@@ -61,13 +62,17 @@ void    Str::reserve(int new_capacity)
         // Disowned or LocalBuf -> Heap
         new_data = (char*)STR_MEMALLOC(new_capacity * sizeof(char));
     }
-    strcpy(new_data, Data); 
+
+    // string in Data might be longer than new_capacity if it wasn't owned, don't copy too much
+    strncpy(new_data, Data, new_capacity - 1);
+    new_data[new_capacity - 1] = 0;
 
     if (Owned && !is_using_local_buf())
         STR_MEMFREE(Data);
 
     Data = new_data;
     Capacity = new_capacity; 
+    Owned = 1;
 }
 
 // Reserve memory, discarding the current of the buffer (if we expect to be fully rewritten)
@@ -91,6 +96,8 @@ void    Str::reserve_discard(int new_capacity)
         Data = (char*)STR_MEMALLOC(new_capacity * sizeof(char));
         Capacity = new_capacity; 
     }
+
+    Owned = 1;
 }
 
 void    Str::shrink_to_fit()
@@ -136,7 +143,7 @@ int     Str::setfv(const char* fmt, va_list args)
     }
 #endif
 
-    Owned = 1;
+    STR_ASSERT(Owned);
     return len;
 }
 
@@ -151,6 +158,11 @@ int     Str::setf(const char* fmt, ...)
 
 int     Str::setfv_nogrow(const char* fmt, va_list args)
 {
+    STR_ASSERT(Owned);
+
+    if (Capacity == 0)
+        return 0;
+
     int w = vsnprintf(Data, Capacity, fmt, args);
     Data[Capacity-1] = 0;
     Owned = 1;
@@ -173,8 +185,8 @@ int     Str::append_from(int idx, char c)
 		reserve(idx + add_len + 1);
 	Data[idx] = c;
 	Data[idx + add_len] = 0;
-	Owned = 1;
-	return add_len;
+    STR_ASSERT(Owned);
+    return add_len;
 }
 
 int     Str::append_from(int idx, const char* s, const char* s_end)
@@ -186,7 +198,7 @@ int     Str::append_from(int idx, const char* s, const char* s_end)
         reserve(idx + add_len + 1);
     memcpy(Data+idx, (const void*)s, add_len);
 	Data[idx + add_len] = 0; // Our source data isn't necessarily zero-terminated
-    Owned = 1;
+    STR_ASSERT(Owned);
     return add_len;
 }
 
@@ -218,7 +230,7 @@ int     Str::appendfv_from(int idx, const char* fmt, va_list args)
     }
 #endif
 
-    Owned = 1;
+    STR_ASSERT(Owned);
     return add_len;
 }
 

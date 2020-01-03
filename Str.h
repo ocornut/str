@@ -263,30 +263,21 @@ Str::Str()
 }
 
 Str::Str(const Str& rhs)
+    : Str()
 {
-    Data = EmptyBuffer;
-    Capacity = 0;
-    LocalBufSize = 0;
-    Owned = 0;
     set(rhs);
 }
 
 Str::Str(const char* rhs)
+    : Str()
 {
-    Data = EmptyBuffer;
-    Capacity = 0;
-    LocalBufSize = 0;
-    Owned = 0;
     set(rhs);
 }
 
 #if STR_SUPPORT_STD_STRING
 Str::Str(const std::string& rhs)
+    : Str()
 {
-    Data = EmptyBuffer;
-    Capacity = 0;
-    LocalBufSize = 0;
-    Owned = 0;
     set(rhs);
 }
 #endif
