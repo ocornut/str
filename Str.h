@@ -64,6 +64,7 @@ All StrXXX types derives from Str and instance hold the local buffer capacity. S
 
 /*
  CHANGELOG
+  0.29 - fixed bug when calling reserve on non-owned strings (ie. when using StrRef or set_ref).
   0.28 - breaking change: replaced Str32 by Str30 to avoid collision with Str32 from MacTypes.h .
   0.27 - added STR_API and basic natvis file.
   0.26 - fixed set(cont char* src, const char* src_end) writing null terminator to the wrong position.
