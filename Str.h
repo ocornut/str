@@ -64,7 +64,7 @@ All StrXXX types derives from Str and instance hold the local buffer capacity. S
 
 /*
  CHANGELOG
-  0.29 - fixed bug when calling reserve on non-owned strings (ie. when using StrRef or set_ref).
+  0.29 - fixed bug when calling reserve on non-owned strings (ie. when using StrRef or set_ref), and fixed <string> include.
   0.28 - breaking change: replaced Str32 by Str30 to avoid collision with Str32 from MacTypes.h .
   0.27 - added STR_API and basic natvis file.
   0.26 - fixed set(cont char* src, const char* src_end) writing null terminator to the wrong position.
@@ -100,6 +100,7 @@ TODO
 #define STR_API
 #endif
 #include <stdarg.h>   // for va_list
+#include <string.h>   // for strlen, strcmp, memcpy, etc.
 
 // Configuration: #define STR_SUPPORT_STD_STRING 0 to disable setters variants using const std::string& (on by default)
 #ifndef STR_SUPPORT_STD_STRING
@@ -111,9 +112,8 @@ TODO
 #define STR_DEFINE_STR32 0
 #endif
 
-#ifdef STR_SUPPORT_STD_STRING
+#if STR_SUPPORT_STD_STRING
 #include <string>
-#include <string.h>
 #endif
 
 // This is the base class that you can pass around
