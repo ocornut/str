@@ -1,16 +1,22 @@
-// Str v0.29
-// Simple c++ string type with an optional local buffer, by omar cornut
+// Str v0.30
+// Simple C++ string type with an optional local buffer, by Omar Cornut
 // https://github.com/ocornut/str
 
 // LICENSE
-// This software is in the public domain. Where that dedication is not
-// recognized, you are granted a perpetual, irrevocable license to copy,
-// distribute, and modify this file as you see fit.
+//  This software is in the public domain. Where that dedication is not
+//  recognized, you are granted a perpetual, irrevocable license to copy,
+//  distribute, and modify this file as you see fit.
+
+// USAGE
+//  Include this file in whatever places need to refer to it.
+//  In ONE .cpp file, write '#define STR_IMPLEMENTATION' before the #include of this file.
+//  This expands out the actual implementation into that C/C++ file.
+
 
 /*
-- This isn't a fully featured string class. 
+- This isn't a fully featured string class.
 - It is a simple, bearable replacement to std::string that isn't heap abusive nor bloated (can actually be debugged by humans).
-- String are mutable. We don't maintain size so length() is not-constant time. 
+- String are mutable. We don't maintain size so length() is not-constant time.
 - Maximum string size currently limited to 2 MB (we allocate 21 bits to hold capacity).
 - Local buffer size is currently limited to 1023 bytes (we allocate 10 bits to hold local buffer size).
 - In "non-owned" mode for literals/reference we don't do any tracking/counting of references.
@@ -64,26 +70,31 @@ All StrXXX types derives from Str and instance hold the local buffer capacity. S
 
 /*
  CHANGELOG
+  0.30 - turned into a single header file, removed Str.cpp.
   0.29 - fixed bug when calling reserve on non-owned strings (ie. when using StrRef or set_ref), and fixed <string> include.
   0.28 - breaking change: replaced Str32 by Str30 to avoid collision with Str32 from MacTypes.h .
-  0.27 - added STR_API and basic natvis file.
+  0.27 - added STR_API and basic .natvis file.
   0.26 - fixed set(cont char* src, const char* src_end) writing null terminator to the wrong position.
   0.25 - allow set(const char* NULL) or operator= NULL to clear the string. note that set() from range or other types are not allowed.
   0.24 - allow set_ref(const char* NULL) to clear the string. include fixes for linux.
   0.23 - added append(char). added append_from(int idx, XXX) functions. fixed some compilers warnings.
   0.22 - documentation improvements, comments. fixes for some compilers.
-  0.21 - added StrXXXf() constructor to construct directly from a format string. 
+  0.21 - added StrXXXf() constructor to construct directly from a format string.
 */
 
 /*
 TODO
-- Since we lose 4-bytes of padding on 64-bits architecture, perhaps just spread the header to 8-bytes and lift size limits? 
+- Since we lose 4-bytes of padding on 64-bits architecture, perhaps just spread the header to 8-bytes and lift size limits?
 - More functions/helpers.
 */
 
-#pragma once
+#ifndef STR_INCLUDED
+#define STR_INCLUDED
 
-// Configuration
+//-------------------------------------------------------------------------
+// CONFIGURATION
+//-------------------------------------------------------------------------
+
 #ifndef STR_MEMALLOC
 #define STR_MEMALLOC  malloc
 #include <stdlib.h>
@@ -115,6 +126,10 @@ TODO
 #if STR_SUPPORT_STD_STRING
 #include <string>
 #endif
+
+//-------------------------------------------------------------------------
+// HEADERS
+//-------------------------------------------------------------------------
 
 // This is the base class that you can pass around
 // Footprint is 8-bytes (32-bits arch) or 16-bytes (64-bits arch)
@@ -362,5 +377,277 @@ STR_DEFINETYPE_F(Str32, Str32f)
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
+
+#endif // #ifndef STR_INCLUDED
+
+//-------------------------------------------------------------------------
+// IMPLEMENTATION
+//-------------------------------------------------------------------------
+
+#ifdef STR_IMPLEMENTATION
+
+
+#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+#include <stdio.h> // for vsnprintf
+
+// On some platform vsnprintf() takes va_list by reference and modifies it.
+// va_copy is the 'correct' way to copy a va_list but Visual Studio prior to 2013 doesn't have it.
+#ifndef va_copy
+#define va_copy(dest, src) (dest = src)
+#endif
+
+// Static empty buffer we can point to for empty strings
+// Pointing to a literal increases the like-hood of getting a crash if someone attempts to write in the empty string buffer.
+char*   Str::EmptyBuffer = (char*)"\0NULL";
+
+// Clear
+void    Str::clear()
+{
+    if (Owned && !is_using_local_buf())
+        STR_MEMFREE(Data);
+    if (LocalBufSize)
+    {
+        Data = local_buf();
+        Data[0] = '\0';
+        Capacity = LocalBufSize;
+        Owned = 1;
+    }
+    else
+    {
+        Data = EmptyBuffer;
+        Capacity = 0;
+        Owned = 0;
+    }
+}
+
+// Reserve memory, preserving the current of the buffer
+void    Str::reserve(int new_capacity)
+{
+    if (new_capacity <= Capacity)
+        return;
+
+    char* new_data;
+    if (new_capacity < LocalBufSize)
+    {
+        // Disowned -> LocalBuf
+        new_data = local_buf();
+        new_capacity = LocalBufSize;
+    }
+    else
+    {
+        // Disowned or LocalBuf -> Heap
+        new_data = (char*)STR_MEMALLOC(new_capacity * sizeof(char));
+    }
+
+    // string in Data might be longer than new_capacity if it wasn't owned, don't copy too much
+    strncpy(new_data, Data, new_capacity - 1);
+    new_data[new_capacity - 1] = 0;
+
+    if (Owned && !is_using_local_buf())
+        STR_MEMFREE(Data);
+
+    Data = new_data;
+    Capacity = new_capacity;
+    Owned = 1;
+}
+
+// Reserve memory, discarding the current of the buffer (if we expect to be fully rewritten)
+void    Str::reserve_discard(int new_capacity)
+{
+    if (new_capacity <= Capacity)
+        return;
+
+    if (Owned && !is_using_local_buf())
+        STR_MEMFREE(Data);
+
+    if (new_capacity < LocalBufSize)
+    {
+        // Disowned -> LocalBuf
+        Data = local_buf();
+        Capacity = LocalBufSize;
+    }
+    else
+    {
+        // Disowned or LocalBuf -> Heap
+        Data = (char*)STR_MEMALLOC(new_capacity * sizeof(char));
+        Capacity = new_capacity;
+    }
+    Owned = 1;
+}
+
+void    Str::shrink_to_fit()
+{
+    if (!Owned || is_using_local_buf())
+        return;
+    int new_capacity = length() + 1;
+    if (Capacity <= new_capacity)
+        return;
+
+    char* new_data = (char*)STR_MEMALLOC(new_capacity * sizeof(char));
+    memcpy(new_data, Data, new_capacity);
+    STR_MEMFREE(Data);
+    Data = new_data;
+    Capacity = new_capacity;
+}
+
+// FIXME: merge setfv() and appendfv()?
+int     Str::setfv(const char* fmt, va_list args)
+{
+    // Needed for portability on platforms where va_list are passed by reference and modified by functions
+    va_list args2;
+    va_copy(args2, args);
+
+    // MSVC returns -1 on overflow when writing, which forces us to do two passes
+    // FIXME-OPT: Find a way around that.
+#ifdef _MSC_VER
+    int len = vsnprintf(NULL, 0, fmt, args);
+    STR_ASSERT(len >= 0);
+
+    if (Capacity < len + 1)
+        reserve_discard(len + 1);
+    len = vsnprintf(Data, len + 1, fmt, args2);
+#else
+    // First try
+    int len = vsnprintf(Owned ? Data : NULL, Owned ? Capacity : 0, fmt, args);
+    STR_ASSERT(len >= 0);
+
+    if (Capacity < len + 1)
+    {
+        reserve_discard(len + 1);
+        len = vsnprintf(Data, len + 1, fmt, args2);
+    }
+#endif
+
+    STR_ASSERT(Owned);
+    return len;
+}
+
+int     Str::setf(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    int len = setfv(fmt, args);
+    va_end(args);
+    return len;
+}
+
+int     Str::setfv_nogrow(const char* fmt, va_list args)
+{
+    STR_ASSERT(Owned);
+
+    if (Capacity == 0)
+        return 0;
+
+    int w = vsnprintf(Data, Capacity, fmt, args);
+    Data[Capacity - 1] = 0;
+    Owned = 1;
+    return (w == -1) ? Capacity - 1 : w;
+}
+
+int     Str::setf_nogrow(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    int len = setfv_nogrow(fmt, args);
+    va_end(args);
+    return len;
+}
+
+int     Str::append_from(int idx, char c)
+{
+    int add_len = 1;
+    if (Capacity < idx + add_len + 1)
+        reserve(idx + add_len + 1);
+    Data[idx] = c;
+    Data[idx + add_len] = 0;
+    STR_ASSERT(Owned);
+    return add_len;
+}
+
+int     Str::append_from(int idx, const char* s, const char* s_end)
+{
+    if (!s_end)
+        s_end = s + strlen(s);
+    int add_len = (int)(s_end - s);
+    if (Capacity < idx + add_len + 1)
+        reserve(idx + add_len + 1);
+    memcpy(Data + idx, (const void*)s, add_len);
+    Data[idx + add_len] = 0; // Our source data isn't necessarily zero-terminated
+    STR_ASSERT(Owned);
+    return add_len;
+}
+
+// FIXME: merge setfv() and appendfv()?
+int     Str::appendfv_from(int idx, const char* fmt, va_list args)
+{
+    // Needed for portability on platforms where va_list are passed by reference and modified by functions
+    va_list args2;
+    va_copy(args2, args);
+
+    // MSVC returns -1 on overflow when writing, which forces us to do two passes
+    // FIXME-OPT: Find a way around that.
+#ifdef _MSC_VER
+    int add_len = vsnprintf(NULL, 0, fmt, args);
+    STR_ASSERT(add_len >= 0);
+
+    if (Capacity < idx + add_len + 1)
+        reserve(idx + add_len + 1);
+    add_len = vsnprintf(Data + idx, add_len + 1, fmt, args2);
+#else
+    // First try
+    int add_len = vsnprintf(Owned ? Data + idx : NULL, Owned ? Capacity - idx : 0, fmt, args);
+    STR_ASSERT(add_len >= 0);
+
+    if (Capacity < idx + add_len + 1)
+    {
+        reserve(idx + add_len + 1);
+        add_len = vsnprintf(Data + idx, add_len + 1, fmt, args2);
+    }
+#endif
+
+    STR_ASSERT(Owned);
+    return add_len;
+}
+
+int     Str::appendf_from(int idx, const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    int len = appendfv_from(idx, fmt, args);
+    va_end(args);
+    return len;
+}
+
+int     Str::append(char c)
+{
+    int cur_len = length();
+    return append_from(cur_len, c);
+}
+
+int     Str::append(const char* s, const char* s_end)
+{
+    int cur_len = length();
+    return append_from(cur_len, s, s_end);
+}
+
+int     Str::appendfv(const char* fmt, va_list args)
+{
+    int cur_len = length();
+    return appendfv_from(cur_len, fmt, args);
+}
+
+int     Str::appendf(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    int len = appendfv(fmt, args);
+    va_end(args);
+    return len;
+}
+
+#endif // #define STR_IMPLEMENTATION
 
 //-------------------------------------------------------------------------
