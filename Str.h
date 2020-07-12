@@ -112,6 +112,7 @@ TODO
 #endif
 #include <stdarg.h>   // for va_list
 #include <string.h>   // for strlen, strcmp, memcpy, etc.
+#include <utility>    // for std::move
 
 // Configuration: #define STR_SUPPORT_STD_STRING 0 to disable setters variants using const std::string& (on by default)
 #ifndef STR_SUPPORT_STD_STRING
@@ -178,8 +179,11 @@ public:
     inline bool         operator==(const char* rhs) const       { return strcmp(c_str(), rhs) == 0; }
 
     inline Str(const Str& rhs);
+    inline Str(Str&& rhs);
     inline void         set(const Str& src);
+    inline void         set(Str&& src);
     inline Str&         operator=(const Str& rhs)               { set(rhs); return *this; }
+    inline Str&         operator=(Str&& rhs)                    { set(std::move(rhs)); return *this; }
     inline bool         operator==(const Str& rhs) const        { return strcmp(c_str(), rhs.c_str()) == 0; }
 
 #if STR_SUPPORT_STD_STRING
@@ -250,6 +254,25 @@ void    Str::set(const Str& src)
     Owned = 1;
 }
 
+void    Str::set(Str&& src)
+{
+    if (!src.Owned)
+        set_ref(src.c_str());
+    else if (src.is_using_local_buf())
+        set(src.local_buf());
+    else
+    {
+        // Take over the other string's heap allocation
+        if (Owned && !is_using_local_buf())
+            STR_MEMFREE(Data);
+        Data = src.Data;
+        Capacity = src.Capacity;
+        Owned = 1;
+        src.Owned = 0;  // prevent src.clear() from freeing the memory
+        src.clear();
+    }
+}
+
 #if STR_SUPPORT_STD_STRING
 void    Str::set(const std::string& src)
 {
@@ -283,6 +306,11 @@ Str::Str(const Str& rhs) : Str()
     set(rhs);
 }
 
+Str::Str(Str&& rhs) : Str()
+{
+    set(std::move(rhs));
+}
+
 Str::Str(const char* rhs) : Str()
 {
     set(rhs);
@@ -313,12 +341,16 @@ class TYPENAME : public Str                                                     
 public:                                                                             \
     TYPENAME() : Str(LOCALBUFSIZE) {}                                               \
     TYPENAME(const Str& rhs) : Str(LOCALBUFSIZE) { set(rhs); }                      \
+    TYPENAME(Str&& rhs) : Str(LOCALBUFSIZE) { set(std::move(rhs)); }                \
     TYPENAME(const char* rhs) : Str(LOCALBUFSIZE) { set(rhs); }                     \
     TYPENAME(const TYPENAME& rhs) : Str(LOCALBUFSIZE) { set(rhs); }                 \
+    TYPENAME(TYPENAME&& rhs) : Str(LOCALBUFSIZE) { set(std::move(rhs)); }           \
     TYPENAME(const std::string& rhs) : Str(LOCALBUFSIZE) { set(rhs); }              \
     TYPENAME&   operator=(const char* rhs)          { set(rhs); return *this; }     \
     TYPENAME&   operator=(const Str& rhs)           { set(rhs); return *this; }     \
+    TYPENAME&   operator=(Str&& rhs)                { set(std::move(rhs)); return *this; } \
     TYPENAME&   operator=(const TYPENAME& rhs)      { set(rhs); return *this; }     \
+    TYPENAME&   operator=(TYPENAME&& rhs)           { set(std::move(rhs)); return *this; } \
     TYPENAME&   operator=(const std::string& rhs)   { set(rhs); return *this; }     \
 };
 
@@ -331,11 +363,15 @@ class TYPENAME : public Str                                                     
 public:                                                                             \
     TYPENAME() : Str(LOCALBUFSIZE) {}                                               \
     TYPENAME(const Str& rhs) : Str(LOCALBUFSIZE) { set(rhs); }                      \
+    TYPENAME(Str&& rhs) : Str(LOCALBUFSIZE) { set(std::move(rhs)); }                \
     TYPENAME(const char* rhs) : Str(LOCALBUFSIZE) { set(rhs); }                     \
     TYPENAME(const TYPENAME& rhs) : Str(LOCALBUFSIZE) { set(rhs); }                 \
+    TYPENAME(TYPENAME&& rhs) : Str(LOCALBUFSIZE) { set(std::move(rhs)); }           \
     TYPENAME&   operator=(const char* rhs)          { set(rhs); return *this; }     \
     TYPENAME&   operator=(const Str& rhs)           { set(rhs); return *this; }     \
+    TYPENAME&   operator=(Str&& rhs)                { set(std::move(rhs)); return *this; } \
     TYPENAME&   operator=(const TYPENAME& rhs)      { set(rhs); return *this; }     \
+    TYPENAME&   operator=(TYPENAME&& rhs)           { set(std::move(rhs)); return *this; } \
 };
 
 #endif
@@ -400,7 +436,7 @@ STR_DEFINETYPE_F(Str32, Str32f)
 #endif
 
 // Static empty buffer we can point to for empty strings
-// Pointing to a literal increases the like-hood of getting a crash if someone attempts to write in the empty string buffer.
+// Pointing to a literal increases the likelihood of getting a crash if someone attempts to write in the empty string buffer.
 char*   Str::EmptyBuffer = (char*)"\0NULL";
 
 // Clear
@@ -423,7 +459,7 @@ void    Str::clear()
     }
 }
 
-// Reserve memory, preserving the current of the buffer
+// Reserve memory, preserving the current contents of the buffer
 void    Str::reserve(int new_capacity)
 {
     if (new_capacity <= Capacity)
@@ -454,7 +490,7 @@ void    Str::reserve(int new_capacity)
     Owned = 1;
 }
 
-// Reserve memory, discarding the current of the buffer (if we expect to be fully rewritten)
+// Reserve memory, discarding the current contents of the buffer (if we expect to be fully rewritten)
 void    Str::reserve_discard(int new_capacity)
 {
     if (new_capacity <= Capacity)
