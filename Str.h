@@ -386,11 +386,6 @@ STR_DEFINETYPE_F(Str32, Str32f)
 
 #ifdef STR_IMPLEMENTATION
 
-
-#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include <stdio.h> // for vsnprintf
 
 // On some platform vsnprintf() takes va_list by reference and modifies it.
@@ -443,7 +438,11 @@ void    Str::reserve(int new_capacity)
     }
 
     // string in Data might be longer than new_capacity if it wasn't owned, don't copy too much
+#ifdef _MSC_VER
+    strncpy_s(new_data, (size_t)new_capacity, Data, (size_t)new_capacity - 1);
+#else
     strncpy(new_data, Data, (size_t)new_capacity - 1);
+#endif
     new_data[new_capacity - 1] = 0;
 
     if (Owned && !is_using_local_buf())
