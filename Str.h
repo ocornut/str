@@ -1,4 +1,4 @@
-// Str v0.30
+// Str v0.31
 // Simple C++ string type with an optional local buffer, by Omar Cornut
 // https://github.com/ocornut/str
 
@@ -70,6 +70,7 @@ All StrXXX types derives from Str and instance hold the local buffer capacity. S
 
 /*
  CHANGELOG
+  0.31 - fixed various warnings.
   0.30 - turned into a single header file, removed Str.cpp.
   0.29 - fixed bug when calling reserve on non-owned strings (ie. when using StrRef or set_ref), and fixed <string> include.
   0.28 - breaking change: replaced Str32 by Str30 to avoid collision with Str32 from MacTypes.h .
@@ -339,6 +340,9 @@ public:                                                                         
 };
 
 #endif
+
+// Disable PVS-Studio warning V730: Not all members of a class are initialized inside the constructor (local_buf is not initialized and that is fine)
+// -V:STR_DEFINETYPE:730
 
 // Helper to define StrXXXf constructors
 #define STR_DEFINETYPE_F(TYPENAME, TYPENAME_F)                                      \
