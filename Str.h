@@ -161,6 +161,7 @@ public:
     int                 append_from(int idx, const char* s, const char* s_end = NULL);		// If you know the string length or want to append from a certain point
     int                 appendf_from(int idx, const char* fmt, ...);
     int                 appendfv_from(int idx, const char* fmt, va_list args);
+    void                replace(const char* find, const char* repl);
 
     void                clear();
     void                reserve(int cap);
@@ -649,6 +650,49 @@ int     Str::appendf(const char* fmt, ...)
     int len = appendfv(fmt, args);
     va_end(args);
     return len;
+}
+
+void Str::replace(const char* find, const char* repl)
+{
+    STR_ASSERT(Owned == 1);
+    STR_ASSERT(find != NULL && *find);
+    STR_ASSERT(repl != NULL);
+    int find_len = (int)strlen(find);
+    int repl_len = (int)strlen(repl);
+    int repl_diff = repl_len - find_len;
+
+    // Estimate required length of new buffer if string size increases.
+    if (repl_diff > 0)
+    {
+        int need_capacity = length();
+        for (char* p = Data, *end = Data + length(); p != NULL && p < end;)
+        {
+            p = (char*)memmem(p, end - p, find, find_len);
+            if (p)
+            {
+                need_capacity += repl_diff;
+                p += find_len;
+            }
+        }
+        if (need_capacity > Capacity)
+        {
+            reserve(need_capacity);
+            STR_ASSERT(Capacity >= need_capacity);
+        }
+    }
+
+    // Replace data.
+    for (char* p = Data, *end = Data + length(); p != NULL && p < end;)
+    {
+        p = (char*)memmem(p, end - p, find, find_len);
+        if (p)
+        {
+            memmove(p + repl_len, p + find_len, end - p - find_len + 1);
+            memcpy(p, repl, repl_len);
+            p += repl_len;
+            end += repl_diff;
+        }
+    }
 }
 
 #endif // #define STR_IMPLEMENTATION
