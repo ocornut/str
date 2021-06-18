@@ -652,9 +652,8 @@ int     Str::appendf(const char* fmt, ...)
     return len;
 }
 
-void Str::replace(const char* find, const char* repl)
+void    Str::replace(const char* find, const char* repl)
 {
-    STR_ASSERT(Owned == 1);
     STR_ASSERT(find != NULL && *find);
     STR_ASSERT(repl != NULL);
     int find_len = (int)strlen(find);
@@ -662,9 +661,10 @@ void Str::replace(const char* find, const char* repl)
     int repl_diff = repl_len - find_len;
 
     // Estimate required length of new buffer if string size increases.
+    int need_capacity = Capacity;
     if (repl_diff > 0)
     {
-        int need_capacity = length();
+        need_capacity = length() + 1;
         for (char* p = Data, *end = Data + length(); p != NULL && p < end;)
         {
             p = (char*)memmem(p, end - p, find, find_len);
@@ -674,12 +674,13 @@ void Str::replace(const char* find, const char* repl)
                 p += find_len;
             }
         }
-        if (need_capacity > Capacity)
-        {
-            reserve(need_capacity);
-            STR_ASSERT(Capacity >= need_capacity);
-        }
     }
+
+    const char* not_owned_data = Owned ? NULL : Data;
+    if (!Owned || need_capacity > Capacity)
+        reserve(need_capacity);
+    if (not_owned_data != NULL)
+        set(not_owned_data);
 
     // Replace data.
     for (char* p = Data, *end = Data + length(); p != NULL && p < end;)
