@@ -662,8 +662,10 @@ void    Str::replace(const char* find, const char* repl)
 
     // Estimate required length of new buffer if string size increases.
     int need_capacity = Capacity;
+    int num_matches = INT_MAX;
     if (repl_diff > 0)
     {
+        num_matches = 0;
         need_capacity = length() + 1;
         for (char* p = Data, *end = Data + length(); p != NULL && p < end;)
         {
@@ -672,9 +674,13 @@ void    Str::replace(const char* find, const char* repl)
             {
                 need_capacity += repl_diff;
                 p += find_len;
+                num_matches++;
             }
         }
     }
+
+    if (num_matches == 0)
+        return;
 
     const char* not_owned_data = Owned ? NULL : Data;
     if (!Owned || need_capacity > Capacity)
@@ -683,7 +689,7 @@ void    Str::replace(const char* find, const char* repl)
         set(not_owned_data);
 
     // Replace data.
-    for (char* p = Data, *end = Data + length(); p != NULL && p < end;)
+    for (char* p = Data, *end = Data + length(); p != NULL && p < end && num_matches--;)
     {
         p = (char*)memmem(p, end - p, find, find_len);
         if (p)
