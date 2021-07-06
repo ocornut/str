@@ -1,4 +1,4 @@
-// Str v0.31
+// Str v0.32
 // Simple C++ string type with an optional local buffer, by Omar Cornut
 // https://github.com/ocornut/str
 
@@ -70,6 +70,7 @@ All StrXXX types derives from Str and instance hold the local buffer capacity. S
 
 /*
  CHANGELOG
+  0.32 - added owned() accessor.
   0.31 - fixed various warnings.
   0.30 - turned into a single header file, removed Str.cpp.
   0.29 - fixed bug when calling reserve on non-owned strings (ie. when using StrRef or set_ref), and fixed <string> include.
@@ -147,6 +148,7 @@ public:
     inline bool         empty() const                           { return Data[0] == 0; }
     inline int          length() const                          { return (int)strlen(Data); }    // by design, allow user to write into the buffer at any time
     inline int          capacity() const                        { return Capacity; }
+    inline bool         owned() const                           { return Owned ? true : false; }
 
     inline void         set_ref(const char* src);
     int                 setf(const char* fmt, ...);
