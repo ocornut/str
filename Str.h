@@ -179,17 +179,21 @@ public:
     inline void         set(const char* src, const char* src_end);
     inline Str&         operator=(const char* rhs)              { set(rhs); return *this; }
     inline bool         operator==(const char* rhs) const       { return strcmp(c_str(), rhs) == 0; }
+    inline bool         operator!=(const char* rhs) const       { return strcmp(c_str(), rhs) != 0; }
 
     inline Str(const Str& rhs);
     inline void         set(const Str& src);
     inline Str&         operator=(const Str& rhs)               { set(rhs); return *this; }
     inline bool         operator==(const Str& rhs) const        { return strcmp(c_str(), rhs.c_str()) == 0; }
+    inline bool         operator!=(const Str& rhs) const        { return strcmp(c_str(), rhs.c_str()) != 0; }
 
 #if STR_SUPPORT_STD_STRING
     inline Str(const std::string& rhs);
     inline void         set(const std::string& src);
     inline Str&         operator=(const std::string& rhs)       { set(rhs); return *this; }
     inline bool         operator==(const std::string& rhs)const { return strcmp(c_str(), rhs.c_str()) == 0; }
+    inline bool         operator!=(const std::string& rhs)const { return strcmp(c_str(), rhs.c_str()) != 0; }
+    inline std::string  cpp_str() { std::string s; s.assign(c_str()); return s; };
 #endif
 
     // Destructor for all variants
