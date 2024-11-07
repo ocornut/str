@@ -164,6 +164,7 @@ public:
     int                 append_from(int idx, const char* s, const char* s_end = NULL);		// If you know the string length or want to append from a certain point
     int                 appendf_from(int idx, const char* fmt, ...);
     int                 appendfv_from(int idx, const char* fmt, va_list args);
+    void                replace(const char* find, const char* repl);
 
     void                clear();
     void                reserve(int cap);
@@ -653,6 +654,56 @@ int     Str::appendf(const char* fmt, ...)
     int len = appendfv(fmt, args);
     va_end(args);
     return len;
+}
+
+void    Str::replace(const char* find, const char* repl)
+{
+    STR_ASSERT(find != NULL && *find);
+    STR_ASSERT(repl != NULL);
+    int find_len = (int)strlen(find);
+    int repl_len = (int)strlen(repl);
+    int repl_diff = repl_len - find_len;
+
+    // Estimate required length of new buffer if string size increases.
+    int need_capacity = Capacity;
+    int num_matches = INT_MAX;
+    if (repl_diff > 0)
+    {
+        num_matches = 0;
+        need_capacity = length() + 1;
+        for (char* p = Data, *end = Data + length(); p != NULL && p < end;)
+        {
+            p = (char*)memmem(p, end - p, find, find_len);
+            if (p)
+            {
+                need_capacity += repl_diff;
+                p += find_len;
+                num_matches++;
+            }
+        }
+    }
+
+    if (num_matches == 0)
+        return;
+
+    const char* not_owned_data = Owned ? NULL : Data;
+    if (!Owned || need_capacity > Capacity)
+        reserve(need_capacity);
+    if (not_owned_data != NULL)
+        set(not_owned_data);
+
+    // Replace data.
+    for (char* p = Data, *end = Data + length(); p != NULL && p < end && num_matches--;)
+    {
+        p = (char*)memmem(p, end - p, find, find_len);
+        if (p)
+        {
+            memmove(p + repl_len, p + find_len, end - p - find_len + 1);
+            memcpy(p, repl, repl_len);
+            p += repl_len;
+            end += repl_diff;
+        }
+    }
 }
 
 #endif // #define STR_IMPLEMENTATION
